@@ -3,27 +3,28 @@
 using namespace std;
 
 bool flag1 = 0, flag2 = 0, flag3 = 0, flag4 = 0;
-char MAP[20][60];
-int MAPTool[20][60];
+char MAP[21][60];
+int MAPTool[21][60];
 
 void display();
 class Robot
 {
 private:
-	int id;
+	
 	char symbol;
 	std::pair<int, int> locationr;
 
 public:
-	Robot(int x, int y, int id, char symbol);
+	int dir;
+    int id;
+	Robot(int x, int y, char symbol);
 	void RobotBoom(int id);
 	void update_location(int x, int y);
 	std::pair<int, int> get_location();
 };
 
-Robot::Robot(int x, int y, int theid, char symbol)
+Robot::Robot(int x, int y, char symbol)
 {
-	id = theid;
 	locationr.first = x;
 	locationr.second = y;
 	symbol = symbol;
@@ -44,6 +45,7 @@ private:
 public:
 	char symbol;
 	int speed;
+	int speedsecond;
 	Player(int x, int y);
 	void update_location(int type);
 	std::pair<int, int> get_location();
@@ -55,7 +57,8 @@ private:
 	std::pair<int, int> location;
 public:
 	int level;
-	Bomb(int x, int y, int le);
+	int state;
+	Bomb(int x, int y);
 	void afterboom();
 	void bomb_picture(int type);
 	void update_location(int t, int y);
@@ -63,35 +66,37 @@ public:
 
 };
 
-Bomb::Bomb(int x, int y, int le)
+Bomb::Bomb(int x, int y)
 {
 	location.first = x;
 	location.second = y;
-	level = le;
 }
 
 std::pair<int, int> Bomb::get_location()
 {
 	return location;
 }
-void Bomb::bomb_picture(int type)
+void Bomb::bomb_picture(int lev)
 {
 	MAP[location.first][location.second] = 'O';
-	if (MAP[location.first - 1][location.second] != '#')
+	for (int i = 1; i <= level; i++)
 	{
-		MAP[location.first - 1][location.second] = '~';
-	}
-	if (MAP[location.first + 1][location.second] != '#')
-	{
-		MAP[location.first + 1][location.second] = '~';
-	}
-	if (MAP[location.first][location.second + 1] != '#')
-	{
-		MAP[location.first][location.second + 1] = '~';
-	}
-	if (MAP[location.first][location.second - 1] != '#')
-	{
-		MAP[location.first][location.second - 1] = '~';
+		if (MAP[location.first - i][location.second] != '#')
+		{
+			MAP[location.first - i][location.second] = '~';
+		}
+		if (MAP[location.first + i][location.second] != '#')
+		{
+			MAP[location.first + i][location.second] = '~';
+		}
+		if (MAP[location.first][location.second + i] != '#')
+		{
+			MAP[location.first][location.second + i] = '~';
+		}
+		if (MAP[location.first][location.second - i] != '#')
+		{
+			MAP[location.first][location.second - i] = '~';
+		}
 	}
 }
 void Bomb::update_location(int x, int y)
@@ -102,64 +107,67 @@ void Bomb::update_location(int x, int y)
 void Bomb::afterboom()
 {
 	MAP[location.first][location.second] = ' ';
-	if (MAP[location.first - 1][location.second] == '~')
+	for (int i = 1; i <= level; i++)
 	{
-		if (MAPTool[location.first - 1][location.second] == 1)
+		if (MAP[location.first - i][location.second] == '~')
 		{
-			MAP[location.first - 1][location.second] = '1';
+			if (MAPTool[location.first - i][location.second] == 1)
+			{
+				MAP[location.first - i][location.second] = '1';
+			}
+			else if (MAPTool[location.first - i][location.second] == 2)
+			{
+				MAP[location.first - i][location.second] = '2';
+			}
+			else
+			{
+				MAP[location.first - i][location.second] = ' ';
+			}
 		}
-		else if (MAPTool[location.first - 1][location.second] == 2)
+		if (MAP[location.first + i][location.second] == '~')
 		{
-			MAP[location.first - 1][location.second] = '2';
+			if (MAPTool[location.first + i][location.second] == 1)
+			{
+				MAP[location.first + 1][location.second] = '1';
+			}
+			else if (MAPTool[location.first + i][location.second] == 2)
+			{
+				MAP[location.first + i][location.second] = '2';
+			}
+			else
+			{
+				MAP[location.first + i][location.second] = ' ';
+			}
 		}
-		else
+		if (MAP[location.first][location.second - i] == '~')
 		{
-			MAP[location.first - 1][location.second] = ' ';
+			if (MAPTool[location.first][location.second - i] == 1)
+			{
+				MAP[location.first][location.second - i] = '1';
+			}
+			else if (MAPTool[location.first][location.second - i] == 2)
+			{
+				MAP[location.first][location.second - i] = '2';
+			}
+			else
+			{
+				MAP[location.first][location.second - i] = ' ';
+			}
 		}
-	}
-	if (MAP[location.first + 1][location.second] == '~')
-	{
-		if (MAPTool[location.first + 1][location.second] == 1)
+		if (MAP[location.first][location.second + i] == '~')
 		{
-			MAP[location.first + 1][location.second] = '1';
-		}
-		else if (MAPTool[location.first + 1][location.second] == 2)
-		{
-			MAP[location.first + 1][location.second] = '2';
-		}
-		else
-		{
-			MAP[location.first + 1][location.second] = ' ';
-		}
-	}
-	if (MAP[location.first][location.second - 1] == '~')
-	{
-		if (MAPTool[location.first][location.second - 1] == 1)
-		{
-			MAP[location.first][location.second - 1] = '1';
-		}
-		else if (MAPTool[location.first][location.second - 1] == 2)
-		{
-			MAP[location.first][location.second - 1] = '2';
-		}
-		else
-		{
-			MAP[location.first][location.second - 1] = ' ';
-		}
-	}
-	if (MAP[location.first][location.second + 1] == '~')
-	{
-		if (MAPTool[location.first][location.second + 1] == 1)
-		{
-			MAP[location.first][location.second + 1] = '1';
-		}
-		else if (MAPTool[location.first][location.second + 1] == 2)
-		{
-			MAP[location.first][location.second + 1] = '2';
-		}
-		else
-		{
-			MAP[location.first][location.second + 1] = ' ';
+			if (MAPTool[location.first][location.second + i] == 1)
+			{
+				MAP[location.first][location.second + i] = '1';
+			}
+			else if (MAPTool[location.first][location.second + 1] == 2)
+			{
+				MAP[location.first][location.second + i] = '2';
+			}
+			else
+			{
+				MAP[location.first][location.second + i] = ' ';
+			}
 		}
 	}
 }
@@ -194,118 +202,135 @@ void Player::update_location(int type)
 }
 Player player1(9, 5);
 Player player2(9, 55);
-
-Robot r1(1, 30, 1, 'R');
-Robot r2(18, 30, 2, 'R');
-Bomb bomb1(0, 0, 1);
-Bomb bomb2(0, 0, 1);
-Bomb rboom1(0, 0, 1);
-Bomb rboom2(0, 0, 1);
+Robot r1(1, 30, 'R');
+Robot r2(19, 30,'R');
+Bomb bomb1(0, 0);
+Bomb bomb2(0, 0);
+Bomb rboom1(0, 0);
+Bomb rboom2(0, 0);
 
 void Robot::RobotBoom(int id)
 {
-	int dir = rand() % 4;
-	// cout << dir << endl;
-	if (dir == 0)
+	int direction = rand() % 5;
+	if (dir)
+		direction = dir;
+	// cout << "!!" << dir << " " << direction;
+	if (direction == 1)
 	{
 		if (MAP[locationr.first - 1][locationr.second] == ' ')
-		{
+		{;
 			MAP[locationr.first - 1][locationr.second] = 'R';
 			MAP[locationr.first][locationr.second] = ' ';
 			update_location(locationr.first - 1, locationr.second);
+			dir = 0;
+			display();
 		}
-		else if (MAP[locationr.first - 1][locationr.second] == '*' && locationr.first < 18 && MAP[locationr.first + 1][locationr.second] == ' ' && MAP[locationr.first + 2][locationr.second] == ' ')
+		else if ((rboom2.state == 4 || rboom1.state == 4) && MAP[locationr.first - 1][locationr.second] == '*' && locationr.first < 18 && MAP[locationr.first + 1][locationr.second] == ' ' && MAP[locationr.first + 2][locationr.second] == ' ')
 		{
-			MAP[locationr.first][locationr.second] = ' ';
-			MAP[locationr.first + 2][locationr.second] = 'R';
-			if (id == 1 && flag3 == 0)
+			MAP[locationr.first][locationr.second] = 'o';
+			dir = 1;
+			if (id == 1 && rboom1.state == 4)
 			{
-				rboom1.update_location(locationr.first - 1, locationr.second);
-				flag3 = 1;
+				rboom1.update_location(locationr.first, locationr.second);
+				rboom1.state = 3;
+
 			}
-			else if (id == 2 && flag4 == 0)
+			else if (id == 2 && rboom2.state == 4)
 			{
-				rboom2.update_location(locationr.first - 1, locationr.second);
-				flag4 = 1;
+				rboom2.update_location(locationr.first, locationr.second);
+				rboom2.state = 3;
 			}
-			update_location(locationr.first + 2, locationr.second);
+			MAP[locationr.first + 1][locationr.second] = 'R';
+			update_location(locationr.first + 1, locationr.second);
+			display();
 		}
 	}
-	else if (dir == 1)
+	else if (direction == 2)
 	{
 		if (MAP[locationr.first + 1][locationr.second] == ' ')
 		{
 			MAP[locationr.first + 1][locationr.second] = 'R';
 			MAP[locationr.first][locationr.second] = ' ';
 			update_location(locationr.first + 1, locationr.second);
+			dir = 0;
+			display();
 		}
-		else if (MAP[locationr.first + 1][locationr.second] == '*' && (locationr.first > 2 && MAP[locationr.first - 1][locationr.second] == ' ' && MAP[locationr.first - 2][locationr.second] == ' '))
+		else if ((rboom2.state == 4 || rboom1.state == 4) && MAP[locationr.first + 1][locationr.second] == '*' && (locationr.first > 2 && MAP[locationr.first - 1][locationr.second] == ' ' && MAP[locationr.first - 2][locationr.second] == ' '))
 		{
-			MAP[locationr.first][locationr.second] = ' ';
-			MAP[locationr.first - 2][locationr.second] = 'R';
-			if (id == 1 && flag3 == 0)
+			MAP[locationr.first][locationr.second] = 'o';
+			dir = 2;
+			if (id == 1 && rboom1.state == 4)
 			{
-
-				rboom1.update_location(locationr.first + 1, locationr.second);
-				flag3 = 1;
+				rboom1.update_location(locationr.first, locationr.second);
+				rboom1.state = 3;
 			}
-			else if (id == 2 && flag4 == 0)
+			else if (id == 2 && rboom2.state == 4)
 			{
-
-				rboom2.update_location(locationr.first + 1, locationr.second);
-				flag4 = 1;
+				rboom2.update_location(locationr.first, locationr.second);
+				rboom2.state = 3;
 			}
-			update_location(locationr.first - 2, locationr.second);
+			MAP[locationr.first - 1][locationr.second] = 'R';
+			update_location(locationr.first - 1, locationr.second);
+			display();
 		}
 	}
-	else if (dir == 2)
+	else if (direction == 3)
 	{
 		if (MAP[locationr.first][locationr.second - 1] == ' ')
 		{
 			MAP[locationr.first][locationr.second - 1] = 'R';
 			MAP[locationr.first][locationr.second] = ' ';
 			update_location(locationr.first, locationr.second - 1);
+			dir = 0;
+			display();
 		}
-		else if (MAP[locationr.first][locationr.second - 1] == '*' && locationr.second < 58 && MAP[locationr.first][locationr.second + 1] == ' ' && MAP[locationr.first][locationr.second + 2] == ' ')
+		else if ((rboom2.state == 4 || rboom1.state == 4) && MAP[locationr.first][locationr.second - 1] == '*' && locationr.second < 58 && MAP[locationr.first][locationr.second + 1] == ' ' && MAP[locationr.first][locationr.second + 2] == ' ')
 		{
-			MAP[locationr.first][locationr.second] = ' ';
-			MAP[locationr.first][locationr.second + 2] = 'R';
-			if (id == 1 && flag3 == 0)
+			MAP[locationr.first][locationr.second] = 'o';
+			dir = 3;
+			if (id == 1 && rboom1.state == 4)
 			{
-				rboom1.update_location(locationr.first, locationr.second - 1);
-				flag3 = 1;
+				rboom1.update_location(locationr.first, locationr.second);
+				rboom1.state = 3;
+
 			}
-			else if (id == 2 && flag4 == 0)
+			else if (id == 2 && rboom2.state == 4)
 			{
-				rboom2.update_location(locationr.first, locationr.second - 1);
-				flag4 = 1;
+				rboom2.update_location(locationr.first, locationr.second);
+				rboom2.state = 3;
 			}
-			update_location(locationr.first, locationr.second + 2);
+			MAP[locationr.first][locationr.second + 1] = 'R';
+			update_location(locationr.first, locationr.second + 1);
+			display();
 		}
 	}
-	else if (dir == 3)
+	else if (direction == 4)
 	{
 		if (MAP[locationr.first][locationr.second + 1] == ' ')
 		{
 			MAP[locationr.first][locationr.second + 1] = 'R';
 			MAP[locationr.first][locationr.second] = ' ';
 			update_location(locationr.first, locationr.second + 1);
+			dir = 0;
+			display();
 		}
-		else if (MAP[locationr.first][locationr.second + 1] == '*' && locationr.second > 2 && MAP[locationr.first][locationr.second - 1] == ' ' && MAP[locationr.first][locationr.second - 2] == ' ')
+		else if ((rboom2.state == 4 || rboom1.state == 4 ) &&  MAP[locationr.first][locationr.second + 1] == '*' && locationr.second > 2 && MAP[locationr.first][locationr.second - 1] == ' ' && MAP[locationr.first][locationr.second - 2] == ' ')
 		{
-			MAP[locationr.first][locationr.second] = ' ';
-			MAP[locationr.first][locationr.second - 2] = 'R';
-			if (id == 1 && flag3 == 0)
+			MAP[locationr.first][locationr.second] = 'o';
+			dir = 4;
+			if (id == 1 && rboom1.state == 4)
 			{
 				rboom1.update_location(locationr.first, locationr.second);
-				flag3 = 1;
+				rboom1.state = 3;
 			}
-			else if (id == 2 && flag4 == 0)
+			else if (id == 2 && rboom2.state == 4)
 			{
 				rboom2.update_location(locationr.first, locationr.second);
-				flag4 = 1;
+				rboom2.state = 3;
 			}
-			update_location(locationr.first, locationr.second - 2);
+			MAP[locationr.first][locationr.second - 1] = 'R';
+			update_location(locationr.first, locationr.second - 1);
+			display();
 		}
 	}
 }
@@ -315,7 +340,7 @@ void Initmap()
 	int locx = 0;
 	int locy = 0;
 	int tool = 0;
-	for (int i = 0; i < 20; i += 2)
+	for (int i = 0; i < 21; i += 2)
 	{
 		for (int j = 0; j < 60; j += 2)
 		{
@@ -324,7 +349,7 @@ void Initmap()
 	}
 	for (int i = 0; i < 500; i++)
 	{
-		locx = rand() % 19;
+		locx = rand() % 20;
 		locy = rand() % 59;
 		if (MAP[locx][locy] != '#')
 		{
@@ -340,7 +365,7 @@ void Initmap()
 		}
 		tool++;
 	}
-	for (int i = 0; i < 20; i++)
+	for (int i = 0; i < 21; i++)
 	{
 		MAP[i][0] = '#';
 		MAP[i][59] = '#';
@@ -348,117 +373,125 @@ void Initmap()
 	for (int i = 0; i < 60; i++)
 	{
 		MAP[0][i] = '#';
-		MAP[19][i] = '#';
+		MAP[20][i] = '#';
 	}
 	MAP[9][5] = 'A';
 	MAP[9][55] = 'B';
 	MAP[1][30] = 'R';
-	MAP[18][30] = 'R';
+	MAP[19][30] = 'R';
 	return;
 }
 
-void deal_with_input(char ch)
+void deal_with_input(char ch)// ´¦Àí¼üÅÌÊäÈë
 {
 	std::pair<int, int> p = player1.get_location();
 	std::pair<int, int> p2 = player2.get_location();
-	if (ch == ' ' && flag1 == 0)
+	if (ch == ' ' && bomb1.state == 4)
 	{
 		bomb1.update_location(p.first, p.second);
-		flag1 = 1;
+		bomb1.state = 3;
+		MAP[p.first][p.second] = 'o';
 	}
-	else if (ch == 13 && flag2 == 0)
+	else if (ch == 13 && bomb2.state == 4)
 	{
 		bomb2.update_location(p2.first, p2.second);
-		flag2 = 1;
+		bomb2.state = 3;
+		MAP[p2.first][p2.second] = 'o';
 	}
 	else
 	{
 		int speed1 = player1.speed;
-		while (speed1 > 0)
+		for (int i = 1; i <= speed1; i++)
 		{
-			speed1--;
+			std::pair<int, int> p = player1.get_location();
+			std::pair<int, int> p2 = player2.get_location();
 			if (ch == 'W')
 			{
+				cout << p.first << " " << p.second << endl;
 
-				if (p.first > 0 && MAP[p.first - 1][p.second] != '#' && MAP[p.first - 1][p.second] != '*')
+				if (p.first > 0 && MAP[p.first - i][p.second] != '#' && MAP[p.first - i][p.second] != '*')
 				{
-					if (MAP[p.first - 1][p.second] == '1')
+					if (MAP[p.first - i][p.second] == '1')
 					{
-						player1.speed++;
-						MAPTool[p.first - 1][p.second] = 0;
+						player1.speed++, player1.speedsecond = 6;
+						MAPTool[p.first - i][p.second] = 0;
 					}
-					else if (MAP[p.first - 1][p.second] == '2')
+					else if (MAP[p.first - i][p.second] == '2')
 					{
 						bomb1.level++;
-						MAPTool[p.first - 1][p.second] = 0;
+						MAPTool[p.first - i][p.second] = 0;
 					}
 					MAP[p.first][p.second] = ' ';
-					MAP[p.first - 1][p.second] = 'A';
+					MAP[p.first - i][p.second] = 'A';
 					player1.update_location(1);
 				}
 			}
 			else if (ch == 'A')
 			{
-				if (p.second > 0 && MAP[p.first][p.second - 1] != '*' && MAP[p.first][p.second - 1] != '#')
+				if (p.second > 0 && MAP[p.first][p.second - i] != '*' && MAP[p.first][p.second - i] != '#')
 				{
-					if (MAP[p.first][p.second - 1] == '1')
+					if (MAP[p.first][p.second - i] == '1')
 					{
-						player1.speed++;
+						player1.speed++, player1.speedsecond = 6;
 						MAPTool[p.first][p.second - 1] = 0;
 					}
-					else if (MAP[p.first][p.second - 1] == '2')
+					else if (MAP[p.first][p.second - i] == '2')
 					{
 						bomb1.level++;
-						MAPTool[p.first][p.second - 1] = 0;
+						MAPTool[p.first][p.second - i] = 0;
 					}
 					MAP[p.first][p.second] = ' ';
-					MAP[p.first][p.second - 1] = 'A';
+					MAP[p.first][p.second - i] = 'A';
 					player1.update_location(2);
 				}
 			}
 			else if (ch == 'S')
 			{
-				if (p.first < 19 && MAP[p.first + 1][p.second] != '*' && MAP[p.first + 1][p.second] != '#')
+				if (p.first < 19 && MAP[p.first + i][p.second] != '*' && MAP[p.first + i][p.second] != '#')
 				{
-					if (MAP[p.first + 1][p.second] == '1')
+					if (MAP[p.first + i][p.second] == '1')
 					{
-						player1.speed++;
-						MAPTool[p.first + 1][p.second] = 0;
+						player1.speed++, player1.speedsecond = 6;
+						MAPTool[p.first + i][p.second] = 0;
 					}
-					else if (MAP[p.first + 1][p.second] == '2')
+					else if (MAP[p.first + i][p.second] == '2')
 					{
 						bomb1.level++;
-						MAPTool[p.first + 1][p.second] = 0;
+						MAPTool[p.first + i][p.second] = 0;
 					}
 					MAP[p.first][p.second] = ' ';
-					MAP[p.first + 1][p.second] = 'A';
+					MAP[p.first + i][p.second] = 'A';
 					player1.update_location(3);
 				}
 			}
 			else if (ch == 'D')
 			{
-				if (p.second < 59 && MAP[p.first][p.second + 1] != '*' && MAP[p.first][p.second + 1] != '#')
+				if (p.second < 59 && MAP[p.first][p.second + i] != '*' && MAP[p.first][p.second + i] != '#')
 				{
-					if (MAP[p.first][p.second + 1] == '1')
+					if (MAP[p.first][p.second + i] == '1')
 					{
-						player1.speed++;
-						MAPTool[p.first][p.second + 1] = 0;
+						player1.speed++, player1.speedsecond = 6;
+						MAPTool[p.first][p.second + i] = 0;
 					}
-					else if (MAP[p.first][p.second + 1] == '2')
+					else if (MAP[p.first][p.second + i] == '2')
 					{
 						bomb1.level++;
-						MAPTool[p.first][p.second + 1] = 0;
+						MAPTool[p.first][p.second + i] = 0;
 					}
 					MAP[p.first][p.second] = ' ';
-					MAP[p.first][p.second + 1] = 'A';
+					MAP[p.first][p.second + i] = 'A';
 					player1.update_location(4);
 				}
 			}
+			cout << p.first << p.second << endl;
+			display();
 		}
 	}
 	int speed2 = player2.speed;
 	while (speed2 > 0)
 	{
+		std::pair<int, int> p = player1.get_location();
+		std::pair<int, int> p2 = player2.get_location();
 		speed2--;
 		if (ch == 'I')
 		{
@@ -466,7 +499,7 @@ void deal_with_input(char ch)
 			{
 				if (MAP[p2.first - 1][p2.second] == '1')
 				{
-					player2.speed++;
+					player2.speed++, player2.speedsecond = 6;
 					MAPTool[p2.first - 1][p2.second] = 0;
 				}
 				else if (MAP[p2.first - 1][p2.second] == '2')
@@ -485,7 +518,7 @@ void deal_with_input(char ch)
 			{
 				if (MAP[p2.first][p2.second - 1] == '1')
 				{
-					player2.speed++;
+					player2.speed++, player2.speedsecond = 6;
 					MAPTool[p2.first][p2.second - 1] = 0;
 				}
 				else if (MAP[p2.first][p2.second - 1] == '2')
@@ -504,7 +537,7 @@ void deal_with_input(char ch)
 			{
 				if (MAP[p2.first + 1][p2.second] == '1')
 				{
-					player2.speed++;
+					player2.speed++, player2.speedsecond = 6;
 					MAPTool[p2.first + 1][p2.second] = 0;
 				}
 				else if (MAP[p2.first + 1][p2.second] == '2')
@@ -523,7 +556,7 @@ void deal_with_input(char ch)
 			{
 				if (MAP[p2.first][p2.second + 1] == '1')
 				{
-					player2.speed++;
+					player2.speed++, player2.speedsecond = 6;
 					MAPTool[p2.first][p2.second + 1] = 0;
 				}
 				else if (MAP[p2.first][p2.second + 1] == '2')
@@ -536,11 +569,12 @@ void deal_with_input(char ch)
 				player2.update_location(4);
 			}
 		}
+		display();
 	}
 }
 	void PrintAll()
 	{
-		for (int i = 0; i < 20; i++)
+		for (int i = 0; i < 21; i++)
 		{
 			for (int j = 0; j < 60; j++)
 			{
@@ -556,67 +590,107 @@ void deal_with_input(char ch)
 	}
 	void deal_with_time(int time)
 	{
-		if (time % 7 == 0)
+		if (time % 9 == 0)
 		{
 			r1.RobotBoom(1);
 			r2.RobotBoom(2);
 			display();
 		}
-		if (time % 3 == 0)
+		if (player1.speedsecond >= 1)
 		{
-			if (flag1 == 1)
-				bomb1.bomb_picture(1), flag1 = 0, display();
-			if (flag2 == 1)
-				bomb2.bomb_picture(1), flag2 = 0, display();
-			if (flag3 == 1)
-				rboom1.bomb_picture(1), flag3 = 0, display();
-			if (flag4 == 1)
-				rboom2.bomb_picture(1), flag4 = 0, display();
+			player1.speedsecond--;
+			if (player1.speedsecond == 0)
+				player1.speed--;
+		}
+		if (player2.speedsecond >= 1)
+		{
+			player2.speedsecond--;
+			if (player2.speedsecond == 0)
+				player2.speed--;
+		}
+		if (bomb1.state <= 3)
+		{
+			bomb1.state--;
+			if (bomb1.state == 0)
+				bomb1.bomb_picture(bomb1.level), bomb1.state = 5, display();
+		}
+		if (bomb2.state <= 3)
+		{
+			bomb2.state--;
+			if (bomb2.state == 0)
+				bomb2.bomb_picture(bomb2.level), bomb2.state = 5, display();
+		}
+		if (rboom1.state <= 3)
+		{
+			rboom1.state--;
+			if (rboom1.state == 0)
+				rboom1.bomb_picture(rboom1.level), rboom1.state = 5, display();
+		}
+		if (rboom2.state <= 3)
+		{
+			rboom2.state--;
+			if (rboom2.state == 0)
+				rboom2.bomb_picture(rboom2.level), rboom2.state = 5, display();
+		}
 
-		}
-		if (flag1 == 0)
+		if (bomb1.state == 5)
 		{
-			bomb1.afterboom();
+			bomb1.state--;
+			bomb1.afterboom(), display();
 		}
-		if (flag2 == 0)
+		if (bomb2.state == 5)
 		{
-			bomb2.afterboom();
+			bomb2.state--;
+			bomb2.afterboom(), display();
 		}
-		if (flag3 == 0)
+		if (rboom1.state == 5)
 		{
-			rboom1.afterboom();
+			rboom1.state--;
+			rboom1.afterboom(), display();
 		}
-		if (flag4 == 0)
+		if (rboom2.state == 5)
 		{
-			rboom2.afterboom();
+			rboom2.state--;
+			rboom2.afterboom(), display();
 		}
 	}
-
+	void InitRole()
+	{
+        player1.symbol = 'A',player1.speed = 1, player1.speedsecond = 0;
+		player2.symbol = 'B',player2.speed = 1, player2.speedsecond = 0;
+		r1.dir = 0, r1.id = 1, r2.id = 2, r2.dir = 0;
+		bomb1.state = 4, bomb1.level = 1;
+		bomb2.state = 4, bomb2.level = 1;
+		rboom1.state = 4, rboom1.level = 1;
+		rboom2.state = 4, rboom2.level = 1;
+	} 
 	int main()
 	{
-		player1.symbol = 'A';
-		player2.symbol = 'B';
-		player1.speed = 1;
-		player2.speed = 1;
 		Initmap();
+		InitRole();
 		PrintAll();
 		int count = 1;
 		int times = 0;
-		bool onetime = 0;
 		while (1)
 		{
 			char ch;
-			if (count == 9000000)
+			if (count % 4500000 == 0)
 			{
-				if (_kbhit())
+                if (_kbhit())
 				{
-					// cout <<"here";
 					ch = _getch();
 					if (ch == 27)
 						break;
 					deal_with_input(ch);
-					display();
+					// display();
 				}
+                if (_kbhit())
+				{
+					_getch();
+				}
+			}
+			if (count == 90000000)
+			{
 				times++;
 				deal_with_time(times);
 				count = 0;
