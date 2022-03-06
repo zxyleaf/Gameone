@@ -1,7 +1,6 @@
 #include <iostream>
 #include <conio.h>
 using namespace std;
-
 const int WIDE = 21;
 const int LEN = 60;
 #define OVER 5
@@ -13,6 +12,8 @@ enum DIRACTION
 	UP = 1, DOWN, RIGHT, LEFT
 };
 void display();
+void PrintAll();
+void Welcome();
 class Robot
 {
 private:
