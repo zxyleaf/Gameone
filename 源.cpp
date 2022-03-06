@@ -638,6 +638,7 @@ void deal_with_input(char ch)// ´¦Àí¼üÅÌÊäÈë
 			}
 			cout << endl;
 		}
+		cout << "Board:\n";
 		cout << "Player1 score : " << player1.score << endl;
 		cout << "Player2 score : " << player2.score << endl;
 	}
