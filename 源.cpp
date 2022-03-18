@@ -110,21 +110,23 @@ std::pair<int, int> Bomb::get_location()
 	return location;
 }
 void Bomb::bomb_picture(int lev, int id)
-{
+{ 
 	MAP[location.first][location.second] = 'o';
 	bool flag1 = 0, flag2 = 0, flag3 = 0, flag4 = 0; // 不会穿透硬墙炸穿
 	for (int i = 1; i <= lev; i++)
 	{
 		if (MAP[location.first - i][location.second] != '#' && flag1 != 1)
 		{
-			
-			if (MAP[location.first - i][location.second] == '*')
+			if (id != 3 && id != 4)
 			{
-				this->owner->score++;
-			}
-			if (MAP[location.first - i][location.second] == 'A')
-			{
-				this->owner->live = 0;
+				if (MAP[location.first - i][location.second] == '*')
+				{
+					this->owner->score++;
+				}
+				if (MAP[location.first - i][location.second] == 'A')
+				{
+					this->owner->live = 0;
+				}
 			}
 			MAP[location.first - i][location.second] = '~';
 			
@@ -133,13 +135,16 @@ void Bomb::bomb_picture(int lev, int id)
 		    flag1 = 1;
 		if (MAP[location.first + i][location.second] != '#' && flag2 != 1)
 		{
-			if (MAP[location.first + i][location.second] == '*')
+			if (id != 3 && id != 4)
 			{
-				this->owner->score++;
-			}
-			if (MAP[location.first + i][location.second] == 'A')
-			{
-				this->owner->live = 0;
+				if (MAP[location.first + i][location.second] == '*')
+				{
+					this->owner->score++;
+				}
+				if (MAP[location.first + i][location.second] == 'A')
+				{
+					this->owner->live = 0;
+				}
 			}
 			MAP[location.first + i][location.second] = '~';
 		}
@@ -147,14 +152,17 @@ void Bomb::bomb_picture(int lev, int id)
 			flag2 = 1;
 		if (MAP[location.first][location.second + i] != '#' && flag3 != 1)
 		{
-			if (MAP[location.first][location.second + i] == '*')
+			if (id != 3 && id != 4)
 			{
-				this->owner->score++;
-			}
-			if (MAP[location.first][location.second + i] == 'A')
-			{
-				this->owner->live = 0;
-				
+				if (MAP[location.first][location.second + i] == '*')
+				{
+					this->owner->score++;
+				}
+				if (MAP[location.first][location.second + i] == 'A')
+				{
+					this->owner->live = 0;
+
+				}
 			}
 			MAP[location.first][location.second + i] = '~';
 		}
@@ -162,13 +170,16 @@ void Bomb::bomb_picture(int lev, int id)
 			flag3 = 1;
 		if (MAP[location.first][location.second - i] != '#' && flag4 != 1)
 		{
-			if (MAP[location.first][location.second - i] == '*')
+			if (id != 3 && id != 4)
 			{
-				this->owner->score++;
-			}
-			if (MAP[location.first][location.second - i] == 'A')
-			{
-				this->owner->live = 0;
+				if (MAP[location.first][location.second - i] == '*')
+				{
+					this->owner->score++;
+				}
+				if (MAP[location.first][location.second - i] == 'A')
+				{
+					this->owner->live = 0;
+				}
 			}
 			MAP[location.first][location.second - i] = '~';
 		}
@@ -271,7 +282,7 @@ void Robot::RobotBoom()
 			display();
 		}
 		else if ((rboom2.state == 4 || rboom1.state == 4) && MAP[locationr.first - 1][locationr.second] == '*' && locationr.first < 18 && MAP[locationr.first + 1][locationr.second] != '#' && MAP[locationr.first + 2][locationr.second] != '#')
-		{
+		{ 
 			MAP[locationr.first][locationr.second] = 'o';
 			dir = 1;
 			if (this->id == 1 && rboom1.state == 4)
@@ -463,10 +474,6 @@ void Initmap()
 	MAP[1][30] = 'R', MAP[19][30] = 'R';
 }
 
-void Player::SetBomb()
-{
-
-}
 void deal_with_input(char ch)// 处理键盘输入
 {
 	std::pair<int, int> p = player1.get_location();
@@ -771,7 +778,7 @@ void deal_with_input(char ch)// 处理键盘输入
 	}
 	void deal_with_time(int time)
 	{
-		if (time % 20 == 0)
+		if (time % 2 == 0)
 		{
 			r1.RobotBoom();
 			r2.RobotBoom();
@@ -847,13 +854,13 @@ void deal_with_input(char ch)// 处理键盘输入
 		{
 			rboom1.state--;
 			if (rboom1.state == 0)
-				rboom1.bomb_picture(rboom1.level, 1), rboom1.state = 5, display();
+				rboom1.bomb_picture(rboom1.level, 3), rboom1.state = 5, display();
 		}
 		if (rboom2.state <= 3)
 		{
 			rboom2.state--;
 			if (rboom2.state == 0)
-				rboom2.bomb_picture(rboom2.level, 2), rboom2.state = 5, display();
+				rboom2.bomb_picture(rboom2.level, 4), rboom2.state = 5, display();
 		}
 		if (rboom1.state == 5)
 		{
