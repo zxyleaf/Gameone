@@ -39,11 +39,12 @@ private:
 	
 	char symbol;
 	std::pair<int, int> locationr;
-
+	
 public:
 	int predir;
 	int dir;
     int id;
+	Bomb* ownthebomb;
 	Robot(int x, int y, char symbol);
 	void RobotBoom();
 	void update_location(int x, int y);
@@ -95,6 +96,7 @@ public:
 	int state;
 	Bomb* nextBomb;
 	Player* owner;
+	Robot* own;
 	void afterboom();
 	void bomb_picture(int lev, int id);
 	void update_location(int t, int y);
@@ -212,7 +214,12 @@ void Bomb::update_location(int x, int y)
 }
 void Bomb::afterboom()
 {
-	MAP[location.first][location.second] = ' ';
+	if (MAPTool[location.first][location.second] == 1)
+		MAP[location.first][location.second] = '1';
+	else if (MAPTool[location.first][location.second] == 2)
+		MAP[location.first ][location.second] = '2';
+	else
+		MAP[location.first][location.second] = ' ';
 	for (int i = 1; i <= level; i++)
 	{
 		if (MAP[location.first - i][location.second] == '~')
@@ -278,93 +285,81 @@ void Player::update_location(int type)
 
 void Robot::RobotBoom()
 {
-	int direction = rand() % 5;
+	int direction = rand() % 4 + 1;
 	if (dir)
 		direction = dir;
 	while (direction == predir)
-		direction = rand() % 5;
+		direction = rand() % 4 + 1;
 	if (direction == UP)
 	{
-		predir = DOWN;
+		
 		if (MAP[locationr.first - 1][locationr.second] == ' ' || MAP[locationr.first - 1][locationr.second] == '1' || MAP[locationr.first - 1][locationr.second] == '2')
 		{
+			predir = DOWN;
 			MAP[locationr.first - 1][locationr.second] = 'R';
-			if (MAPTool[locationr.first][locationr.second] == 1)
-				MAP[locationr.first][locationr.second] = '1';
-			else if (MAPTool[locationr.first][locationr.second] == 2)
-				MAP[locationr.first][locationr.second] = '2';
-			else 
-				MAP[locationr.first][locationr.second] = ' ';
-			update_location(locationr.first - 1, locationr.second);
-			dir = 0;
-			display();
-		}
-		else if ((rboom2.state == 4 || rboom1.state == 4) && MAP[locationr.first - 1][locationr.second] == '*' && locationr.first < 12 && MAP[locationr.first + 1][locationr.second] != '#' && MAP[locationr.first + 2][locationr.second] != '#')
-		{ 
-			MAP[locationr.first][locationr.second] = 'o';
-			dir = 1;
-			if (this->id == 1 && rboom1.state == 4)
-			{
-				rboom1.update_location(locationr.first, locationr.second);
-				rboom1.state = 3;
-				r1.Walk(2);
-			}
-			else if (this->id == 2 && rboom2.state == 4)
-			{
-				rboom2.update_location(locationr.first, locationr.second);
-				rboom2.state = 3;
-				r2.Walk(2);
-			}
-			MAP[locationr.first][locationr.second] = ' ';
-			MAP[locationr.first + 1][locationr.second] = 'R';
-			update_location(locationr.first + 1, locationr.second);
-			display();
-			
-		}
-	}
-	else if (direction == DOWN)
-	{
-		predir = UP;
-		if (MAP[locationr.first + 1][locationr.second] == ' '|| MAP[locationr.first + 1][locationr.second] == '1' || MAP[locationr.first + 1][locationr.second] == '2' )
-		{
-			MAP[locationr.first + 1][locationr.second] = 'R';
 			if (MAPTool[locationr.first][locationr.second] == 1)
 				MAP[locationr.first][locationr.second] = '1';
 			else if (MAPTool[locationr.first][locationr.second] == 2)
 				MAP[locationr.first][locationr.second] = '2';
 			else
 				MAP[locationr.first][locationr.second] = ' ';
-			update_location(locationr.first + 1, locationr.second);
+			update_location(locationr.first - 1, locationr.second);
 			dir = 0;
 			display();
 		}
-		else if ((rboom2.state == 4 || rboom1.state == 4) && MAP[locationr.first + 1][locationr.second] == '*' && (locationr.first > 2 && MAP[locationr.first - 1][locationr.second] == '#' && MAP[locationr.first - 2][locationr.second] == '#'))
+		else if (this->ownthebomb->state == 4 && MAP[locationr.first - 1][locationr.second] == '*' && locationr.first < 12 && MAP[locationr.first + 1][locationr.second] != ' ' && MAP[locationr.first + 2][locationr.second] != ' ')
 		{
 			MAP[locationr.first][locationr.second] = 'o';
 			dir = 2;
-			if (id == 1 && rboom1.state == 4)
-			{
-				rboom1.update_location(locationr.first, locationr.second);
-				rboom1.state = 3;
-				r1.Walk(1);
-			}
-			else if (id == 2 && rboom2.state == 4)
-			{
-				rboom2.update_location(locationr.first, locationr.second);
-				rboom2.state = 3;
-				r2.Walk(1);
-			}
+			this->ownthebomb->update_location(locationr.first, locationr.second);
+			this->ownthebomb->state = 3;
+			this->Walk(2);
+			MAP[locationr.first][locationr.second] = ' ';
+			MAP[locationr.first + 1][locationr.second] = 'R';
+			update_location(locationr.first + 1, locationr.second);
+			display();
+		}
+		else
+			predir = 1;
+	}
+	else if (direction == DOWN)
+	{
+		
+		if (MAP[locationr.first + 1][locationr.second] == ' ' || MAP[locationr.first + 1][locationr.second] == '1' || MAP[locationr.first + 1][locationr.second] == '2')
+		{
+			predir = UP;
+			MAP[locationr.first + 1][locationr.second] = 'R';
+			if (MAPTool[locationr.first][locationr.second] == 1)
+				MAP[locationr.first][locationr.second] = '1';
+			else if (MAPTool[locationr.first][locationr.second] == 2)
+				MAP[locationr.first][locationr.second] = '2';
+			else
+				MAP[locationr.first][locationr.second] = ' ';
+			update_location(locationr.first + 1, locationr.second);
+			dir = 0;
+			display();
+		}
+		else if (this->ownthebomb->state == 4 && MAP[locationr.first + 1][locationr.second] == '*' && (locationr.first > 2 && MAP[locationr.first - 1][locationr.second] == ' ' && MAP[locationr.first - 2][locationr.second] == ' '))
+		{
+			MAP[locationr.first][locationr.second] = 'o';
+			dir = 1;
+			this->ownthebomb->update_location(locationr.first, locationr.second);
+			this->ownthebomb->state = 3;
+			this->Walk(1);
 			MAP[locationr.first][locationr.second] = ' ';
 			MAP[locationr.first - 1][locationr.second] = 'R';
 			update_location(locationr.first - 1, locationr.second);
 			display();
 		}
+		else
+			predir = 2;
 	}
 	else if (direction == LEFT)
 	{
-		predir = RIGHT;
+
 		if (MAP[locationr.first][locationr.second - 1] == ' ' || MAP[locationr.first][locationr.second - 1] == '1' || MAP[locationr.first][locationr.second - 1] == '2')
 		{
+			predir = RIGHT;
 			MAP[locationr.first][locationr.second - 1] = 'R';
 			if (MAPTool[locationr.first][locationr.second] == 1)
 				MAP[locationr.first][locationr.second] = '1';
@@ -373,68 +368,55 @@ void Robot::RobotBoom()
 			else
 				MAP[locationr.first][locationr.second] = ' ';
 			update_location(locationr.first, locationr.second - 1);
-			dir = 0;
+			dir = LEFT;
 			display();
 		}
-		else if ((rboom2.state == 4 || rboom1.state == 4) && MAP[locationr.first][locationr.second - 1] == '*' && locationr.second < 18 && MAP[locationr.first][locationr.second + 1] == '#' && MAP[locationr.first][locationr.second + 2] == '#')
-		{
-			MAP[locationr.first][locationr.second] = 'o';
-			dir = 3;
-			if (id == 1 && rboom1.state == 4)
-			{
-				rboom1.update_location(locationr.first, locationr.second);
-				rboom1.state = 3;
-				r1.Walk(4);
-			}
-			else if (id == 2 && rboom2.state == 4)
-			{
-				rboom2.update_location(locationr.first, locationr.second);
-				rboom2.state = 3;
-				r2.Walk(4);
-			}
-			MAP[locationr.first][locationr.second] = ' ';
-			MAP[locationr.first][locationr.second + 1] = 'R';
-			update_location(locationr.first, locationr.second + 1);
-			display();
-		}
-	}
-	else if (direction == RIGHT)
-	{
-	    predir = LEFT;
-		if (MAP[locationr.first][locationr.second + 1] == ' ' || MAP[locationr.first][locationr.second + 1] == '1' || MAP[locationr.first][locationr.second + 1] == '2')
-		{
-			MAP[locationr.first][locationr.second + 1] = 'R';
-			if (MAPTool[locationr.first][locationr.second] == 1)
-				MAP[locationr.first][locationr.second] = '1';
-			else if (MAPTool[locationr.first][locationr.second] == 2)
-				MAP[locationr.first][locationr.second] = '2';
-			else
-				MAP[locationr.first][locationr.second] = ' ';
-			update_location(locationr.first, locationr.second + 1);
-			dir = 0;
-			display();
-		}
-		else if ((rboom2.state == 4 || rboom1.state == 4 ) &&  MAP[locationr.first][locationr.second + 1] == '*' && locationr.second > 2 && MAP[locationr.first][locationr.second - 1] == '#' && MAP[locationr.first][locationr.second - 2] == '#')
+		else if (this->ownthebomb->state == 4 && MAP[locationr.first][locationr.second - 1] == '*' && locationr.second < 18 && MAP[locationr.first][locationr.second + 1] == ' ' && MAP[locationr.first][locationr.second + 2] == ' ')
 		{
 			MAP[locationr.first][locationr.second] = 'o';
 			dir = 4;
-			if (id == 1 && rboom1.state == 4)
-			{
-				rboom1.update_location(locationr.first, locationr.second);
-				rboom1.state = 3;
-				r1.Walk(3);
-			}
-			else if (id == 2 && rboom2.state == 4)
-			{
-				rboom2.update_location(locationr.first, locationr.second);
-				rboom2.state = 3;
-				r2.Walk(3);
-			}
+			this->ownthebomb->update_location(locationr.first, locationr.second);
+			this->ownthebomb->state = 3;
+			this->Walk(4);
 			MAP[locationr.first][locationr.second] = ' ';
-			MAP[locationr.first][locationr.second - 1] = 'R';
-			update_location(locationr.first, locationr.second - 1);
+			MAP[locationr.first][locationr.second + 1] = 'R';
+			update_location(locationr.first, locationr.second + 1);
 			display();
 		}
+		else
+			predir = 4;
+	}
+	else if (direction == RIGHT)
+	{
+	    
+	if (MAP[locationr.first][locationr.second + 1] == ' ' || MAP[locationr.first][locationr.second + 1] == '1' || MAP[locationr.first][locationr.second + 1] == '2')
+	{
+		predir = LEFT;
+		MAP[locationr.first][locationr.second + 1] = 'R';
+		if (MAPTool[locationr.first][locationr.second] == 1)
+			MAP[locationr.first][locationr.second] = '1';
+		else if (MAPTool[locationr.first][locationr.second] == 2)
+			MAP[locationr.first][locationr.second] = '2';
+		else
+			MAP[locationr.first][locationr.second] = ' ';
+		update_location(locationr.first, locationr.second + 1);
+		dir = RIGHT;
+		display();
+	}
+	else if (this->ownthebomb->state == 4 && MAP[locationr.first][locationr.second + 1] == '*' && locationr.second > 2 && MAP[locationr.first][locationr.second - 1] == ' ' && MAP[locationr.first][locationr.second - 2] == ' ')
+	{
+		MAP[locationr.first][locationr.second] = 'o';
+		dir = 3;
+		this->ownthebomb->update_location(locationr.first, locationr.second);
+		this->ownthebomb->state = 3;
+		this->Walk(3);
+		MAP[locationr.first][locationr.second] = ' ';
+		MAP[locationr.first][locationr.second - 1] = 'R';
+		update_location(locationr.first, locationr.second - 1);
+		display();
+	}
+	else
+		predir = 3;
 	}
 }
 void Robot::Walk(int dir)
@@ -738,7 +720,7 @@ void deal_with_input(char ch)// 处理键盘输入
 	
 	void deal_with_time(int time)
 	{
-		if (time % 2 == 0)
+		if (time % 6 == 0)
 		{
 			r1.RobotBoom();
 			r2.RobotBoom();
@@ -839,8 +821,10 @@ void deal_with_input(char ch)// 处理键盘输入
 		r1.predir = 0, r1.dir = 0, r1.id = 1, r2.predir = 0, r2.id = 2, r2.dir = 0;
 		bomb1.state = 4, bomb1.level = 1, bomb1.levelsecond = 0;
 		bomb2.state = 4, bomb2.level = 1, bomb2.levelsecond = 0;
-		rboom1.state = 4, rboom1.level = 1;
-		rboom2.state = 4, rboom2.level = 1;
+		rboom1.state = 4, rboom1.level = 1,rboom1.own = &r1;
+		rboom2.state = 4, rboom2.level = 1,rboom2.own = &r2;
+		r1.ownthebomb = &rboom1;
+		r2.ownthebomb = &rboom2;
 	}
 	void InitMap()
 	{
