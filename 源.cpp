@@ -6,6 +6,7 @@ const int LEN = 20;
 #define OVER 5
 #define ONE_SECOND 10000
 int MAPTool[14][20];
+clock_t cur, lasttime;
 
 char MAP[14][20] = {
 	{'#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'},
@@ -36,7 +37,6 @@ void Welcome();
 class Robot
 {
 private:
-	
 	char symbol;
 	std::pair<int, int> locationr;
 	
@@ -72,13 +72,16 @@ class Player
 {
 private:
 	std::pair<int, int> location;
-public:
 	char symbol;
+public:
 	bool live = 1;
 	int score = 0;
 	int speed = 1;
 	int speedsecond;
 	int Bombnum;
+	int Diff;
+	clock_t Lastime;
+	char GetSymbol();
 	void SetBomb();
 	Player(int x, int y);
 	void update_location(int type);
@@ -260,12 +263,16 @@ void Bomb::afterboom()
 		}
 	}
 }
-Player::Player(int x, int y)
+Player::Player(int x, int y, char sy)
 {
+	symbol = sy;
 	location.first = x;
 	location.second = y;
 }
-
+char Player::GetSymbol()
+{
+	return symbol;
+}
 std::pair<int, int> Player::get_location()
 {
 	return location;
@@ -510,9 +517,13 @@ void deal_with_input(char ch)// 处理键盘输入
 	}
 	else
 	{
-		int speed1 = player1.speed;
-		for (int i = 1; i <= speed1; i++)
+		if(ch == 'W' || ch == 'A' || ch == 'S' || ch == 'D')
 		{
+			if ((cur - player1.Lastime) < player1.Diff)
+			{
+				return;
+			}
+			player1.Lastime = cur;
 			std::pair<int, int> p = player1.get_location();
 			if (ch == 'W')
 			{
@@ -520,7 +531,8 @@ void deal_with_input(char ch)// 处理键盘输入
 				{
 					if (MAP[p.first - 1][p.second] == '1')
 					{
-						player1.score++, player1.speed++, player1.speedsecond += 6;
+						player1.score++, player1.speedsecond += 6;
+						player1.Diff /= 4;
 						MAPTool[p.first - 1][p.second] = 0;
 					}
 					else if (MAP[p.first - 1][p.second] == '2')
@@ -549,11 +561,19 @@ void deal_with_input(char ch)// 处理键盘输入
 				{
 					if (MAP[p.first][p.second - 1] == '1')
 					{
-						player1.score++, player1.speed++, player1.speedsecond += 6;
+						player1.score++, player1.speedsecond += 6;
+						player1.Diff /= 4;
 						MAPTool[p.first][p.second - 1] = 0;
 					}
 					else if (MAP[p.first][p.second - 1] == '2')
 					{
+						Bomb* cnt = head1;
+						while (cnt != NULL)
+						{
+							cnt->level++;
+							cnt->levelsecond += 6;
+							cnt = cnt->nextBomb;
+						}
 						player1.score++, bomb1.level++, bomb1.levelsecond += 6;
 						MAPTool[p.first][p.second - 1] = 0;
 					}
@@ -571,11 +591,19 @@ void deal_with_input(char ch)// 处理键盘输入
 				{
 					if (MAP[p.first + 1][p.second] == '1')
 					{
-						player1.score++, player1.speed++, player1.speedsecond += 6;
+						player1.score++, player1.speedsecond += 6;
+						player1.Diff /= 4;
 						MAPTool[p.first + 1][p.second] = 0;
 					}
 					else if (MAP[p.first + 1][p.second] == '2')
 					{
+						Bomb* cnt = head1;
+						while (cnt != NULL)
+						{
+							cnt->level++;
+							cnt->levelsecond += 6;
+							cnt = cnt->nextBomb;
+						}
 						player1.score++, bomb1.level++, bomb1.levelsecond += 6;
 						MAPTool[p.first + 1][p.second] = 0;
 					}
@@ -593,11 +621,19 @@ void deal_with_input(char ch)// 处理键盘输入
 				{
 					if (MAP[p.first][p.second + 1] == '1')
 					{
-						player1.score++, player1.speed++, player1.speedsecond += 6;
+						player1.score++, player1.speedsecond += 6;
+						player1.Diff /= 4;
 						MAPTool[p.first][p.second + 1] = 0;
 					}
 					else if (MAP[p.first][p.second + 1] == '2')
 					{
+						Bomb* cnt = head1;
+						while (cnt != NULL)
+						{
+							cnt->level++;
+							cnt->levelsecond += 6;
+							cnt = cnt->nextBomb;
+						}
 						player1.score++, bomb1.level++, bomb1.levelsecond += 6;
 						MAPTool[p.first][p.second + 1] = 0;
 					}
@@ -610,22 +646,33 @@ void deal_with_input(char ch)// 处理键盘输入
 				}
 			}
 		}
-		int speed2 = player2.speed;
-		while (speed2 > 0)
+		else
 		{
+			if ((cur - player2.Lastime) < player2.Diff)
+			{
+				return;
+			}
+			player2.Lastime = cur;
 			std::pair<int, int> p2 = player2.get_location();
-			speed2--;
 			if (ch == 'I')
 			{
 				if (p2.first > 0 && MAP[p2.first - 1][p2.second] != '*' && MAP[p2.first - 1][p2.second] != '#')
 				{
 					if (MAP[p2.first - 1][p2.second] == '1')
 					{
-						player2.score++, player2.speed++, player2.speedsecond += 6;
+						player2.score++, player2.speedsecond += 6;
+						player2.Diff /= 4; 
 						MAPTool[p2.first - 1][p2.second] = 0;
 					}
 					else if (MAP[p2.first - 1][p2.second] == '2')
 					{
+						Bomb* cnt = head2;
+						while (cnt != NULL)
+						{
+							cnt->level++;
+							cnt->levelsecond += 6;
+							cnt = cnt->nextBomb;
+						}
 						player2.score++, bomb2.level++, bomb2.levelsecond += 6;
 						MAPTool[p2.first - 1][p2.second] = 0;
 					}
@@ -643,11 +690,19 @@ void deal_with_input(char ch)// 处理键盘输入
 				{
 					if (MAP[p2.first][p2.second - 1] == '1')
 					{
-						player2.score++, player2.speed++, player2.speedsecond += 6;
+						player2.score++, player2.speedsecond += 6;
+						player2.Diff /= 4;
 						MAPTool[p2.first][p2.second - 1] = 0;
 					}
 					else if (MAP[p2.first][p2.second - 1] == '2')
 					{
+						Bomb* cnt = head2;
+						while (cnt != NULL)
+						{
+							cnt->level++;
+							cnt->levelsecond += 6;
+							cnt = cnt->nextBomb;
+						}
 						player2.score++, bomb2.level++, bomb2.levelsecond += 6;
 						MAPTool[p2.first][p2.second - 1] = 0;
 					}
@@ -665,11 +720,19 @@ void deal_with_input(char ch)// 处理键盘输入
 				{
 					if (MAP[p2.first + 1][p2.second] == '1')
 					{
-						player2.score++, player2.speed++, player2.speedsecond += 6;
+						player2.score++, player2.speedsecond += 6;
+						player2.Diff /= 4;
 						MAPTool[p2.first + 1][p2.second] = 0;
 					}
 					else if (MAP[p2.first + 1][p2.second] == '2')
 					{
+						Bomb* cnt = head1;
+						while (cnt != NULL)
+						{
+							cnt->level++;
+							cnt->levelsecond += 6;
+							cnt = cnt->nextBomb;
+						}
 						player2.score++, bomb2.level++, bomb2.levelsecond += 6;
 						MAPTool[p2.first + 1][p2.second] = 0;
 					}
@@ -687,11 +750,19 @@ void deal_with_input(char ch)// 处理键盘输入
 				{
 					if (MAP[p2.first][p2.second + 1] == '1')
 					{
-						player2.score++, player2.speed++, player2.speedsecond += 6;
+						player2.score++, player2.speedsecond += 6;
+						player2.Diff /= 4;
 						MAPTool[p2.first][p2.second + 1] = 0;
 					}
 					else if (MAP[p2.first][p2.second + 1] == '2')
 					{
+						Bomb* cnt = head1;
+						while (cnt != NULL)
+						{
+							cnt->level++;
+							cnt->levelsecond += 6;
+							cnt = cnt->nextBomb;
+						}
 						player2.score++, bomb2.level++, bomb2.levelsecond += 6;
 						MAPTool[p2.first][p2.second + 1] = 0;
 					}
@@ -727,7 +798,7 @@ void deal_with_input(char ch)// 处理键盘输入
 	
 	void deal_with_time(int time)
 	{
-		if (time % 6 == 0)
+		if (time % 8 == 0)
 		{
 			r1.RobotBoom();
 			r2.RobotBoom();
@@ -797,6 +868,18 @@ void deal_with_input(char ch)// 处理键盘输入
 			if (player2.speedsecond == 0)
 				player2.speed = 1;
 		}
+		if (bomb1.levelsecond >= 1)
+		{
+			bomb1.levelsecond--;
+			if (bomb1.levelsecond == 0)
+				bomb1.level = 1;
+		}
+		if (bomb2.levelsecond >= 1)
+		{
+			bomb2.levelsecond--;
+			if (bomb2.levelsecond == 0)
+				bomb2.level = 1;
+		}
 		if (rboom1.state <= 3)
 		{
 			rboom1.state--;
@@ -822,8 +905,8 @@ void deal_with_input(char ch)// 处理键盘输入
 	}
 	void InitRole()
 	{
-        player1.symbol = 'A', player1.score = 0, player1.speed = 1, player1.speedsecond = 0;
-		player2.symbol = 'B', player2.score = 0, player2.speed = 1, player2.speedsecond = 0;
+		player1.score = 0, player1.speed = 1, player1.speedsecond = 0, player1.Diff = 150, player1.Lastime = clock();
+		player2.score = 0, player2.speed = 1, player2.speedsecond = 0, player2.Diff = 150, player2.Lastime = clock();
 		player1.Bombnum = 1, player1.live = 1, player2.Bombnum = 1, player2.live = 1;
 		r1.predir = 0, r1.dir = 0, r1.id = 1, r2.predir = 0, r2.id = 2, r2.dir = 0;
 		bomb1.state = 4, bomb1.level = 1, bomb1.levelsecond = 0;
@@ -931,6 +1014,7 @@ void deal_with_input(char ch)// 处理键盘输入
 					ch = _getch();
 					if (ch == 27)
 						break;
+					cur = clock();
 					deal_with_input(ch);
 					display();
 				}
