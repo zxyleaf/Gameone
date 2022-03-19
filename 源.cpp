@@ -1,12 +1,30 @@
 #include <iostream>
 #include <conio.h>
 using namespace std;
-const int WIDE = 21;
-const int LEN = 60;
+const int WIDE = 14;
+const int LEN = 20;
 #define OVER 5
 #define ONE_SECOND 10000
-char MAP[WIDE][LEN];
-int MAPTool[WIDE][LEN];
+int MAPTool[14][20];
+
+char MAP[14][20] = {
+	{'#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'},
+	{'#','*','*','*','#','*','#','*',' ','R','*','*','*',' ','#',' ','#','#','B','#'},
+	{'#','*','*',' ','#','*','#','*',' ',' ','*','*','#',' ','*',' ','*','*',' ','#'},
+	{'#',' ','#',' ','*','*','#','#','*',' ','*',' ','#','#','*','*','*','#',' ','#'},
+	{'#',' ','#','#','#',' ','*','*','#','*',' ','*','*','*',' ','#','#','#','*','#'},
+	{'#','A','*','*','*','*',' ','*','#','*','#','*','*','*',' ','#',' ','#','*','#'},
+	{'#','*',' ',' ','*','#',' ','*','#',' ','#',' ','*','*',' ','#','*',' ',' ','#'},
+	{'#','#',' ','#','#','#','*',' ','#','#','#',' ','*','*','#','#','#','*','#','#'},
+	{'#','#',' ','*','*',' ','*','*','*','*','*',' ',' ','#','#','*',' ','*','*','#'},
+	{'#','*','*','#','*',' ','#','#','#','#','*',' ','#','#','*','*',' ','*','*','#'},
+	{'#','*','*','#','*',' ','#','*','#','#','*','*','*','*','*',' ',' ',' ','#','#'},
+	{'#','*',' ',' ','*','*','*',' ',' ',' ',' ','*','*',' ','*','*','*','#','*','#'},
+	{'#','*','*','*','#','*','#','*',' ','R',' ','*','*',' ','#',' ','*','#','*','#'},
+	{'#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'}
+};
+
+
 class Bomb;
 enum DIRACTION
 {
@@ -95,10 +113,10 @@ int Bomb::GetId()
 {
 	return id;
 }
-Player player1(WIDE / 2 - 1, 5);
-Player player2(WIDE / 2 - 1, LEN - 5);
-Robot r1(1, LEN / 2, 'R');
-Robot r2(WIDE - 2, LEN / 2, 'R');
+Player player1(5, 1);
+Player player2(1, 18);
+Robot r1(1, 9, 'R');
+Robot r2(12, 9, 'R');
 Bomb bomb1;
 Bomb bomb2;
 Bomb rboom1;
@@ -281,7 +299,7 @@ void Robot::RobotBoom()
 			dir = 0;
 			display();
 		}
-		else if ((rboom2.state == 4 || rboom1.state == 4) && MAP[locationr.first - 1][locationr.second] == '*' && locationr.first < 18 && MAP[locationr.first + 1][locationr.second] != '#' && MAP[locationr.first + 2][locationr.second] != '#')
+		else if ((rboom2.state == 4 || rboom1.state == 4) && MAP[locationr.first - 1][locationr.second] == '*' && locationr.first < 12 && MAP[locationr.first + 1][locationr.second] != '#' && MAP[locationr.first + 2][locationr.second] != '#')
 		{ 
 			MAP[locationr.first][locationr.second] = 'o';
 			dir = 1;
@@ -358,7 +376,7 @@ void Robot::RobotBoom()
 			dir = 0;
 			display();
 		}
-		else if ((rboom2.state == 4 || rboom1.state == 4) && MAP[locationr.first][locationr.second - 1] == '*' && locationr.second < 58 && MAP[locationr.first][locationr.second + 1] == '#' && MAP[locationr.first][locationr.second + 2] == '#')
+		else if ((rboom2.state == 4 || rboom1.state == 4) && MAP[locationr.first][locationr.second - 1] == '*' && locationr.second < 18 && MAP[locationr.first][locationr.second + 1] == '#' && MAP[locationr.first][locationr.second + 2] == '#')
 		{
 			MAP[locationr.first][locationr.second] = 'o';
 			dir = 3;
@@ -444,35 +462,7 @@ void Robot::Walk(int dir)
 	}
 	display();
 }
-void Initmap()
-{
-	memset(MAP, ' ', sizeof(MAP));
-	int locx = 0;
-	int locy = 0;
-	int tool = 0;
-	for (int i = 0; i < 21; i += 2)
-		for (int j = 0; j < 60; j += 2)
-			MAP[i][j] = '#';
-	for (int i = 0; i < 500; i++)
-	{
-		locx = rand() % 20;
-		locy = rand() % 59;
-		if (MAP[locx][locy] != '#')
-			MAP[locx][locy] = '*';
-		if (tool % 3 == 0)
-			MAPTool[locx][locy] = 1;
-		else if (tool % 4 == 0)
-			MAPTool[locx][locy] = 2;
-		tool++;
-	}
-	for (int i = 0; i < 21; i++)
-	    MAP[i][0] = '#', MAP[i][59] = '#';
-	for (int i = 0; i < 60; i++)
-		MAP[0][i] = '#', MAP[20][i] = '#';
-	MAP[9][5] = 'A';
-	MAP[9][55] = 'B';
-	MAP[1][30] = 'R', MAP[19][30] = 'R';
-}
+
 
 void deal_with_input(char ch)// 处理键盘输入
 {
@@ -587,7 +577,7 @@ void deal_with_input(char ch)// 处理键盘输入
 			}
 			else if (ch == 'S')
 			{
-				if (p.first < 19 && MAP[p.first + 1][p.second] != '*' && MAP[p.first + 1][p.second] != '#')
+				if (p.first < 13 && MAP[p.first + 1][p.second] != '*' && MAP[p.first + 1][p.second] != '#')
 				{
 					if (MAP[p.first + 1][p.second] == '1')
 					{
@@ -609,7 +599,7 @@ void deal_with_input(char ch)// 处理键盘输入
 			}
 			else if (ch == 'D')
 			{
-				if (p.second < 59 && MAP[p.first][p.second + 1] != '*' && MAP[p.first][p.second + 1] != '#')
+				if (p.second < 19 && MAP[p.first][p.second + 1] != '*' && MAP[p.first][p.second + 1] != '#')
 				{
 					if (MAP[p.first][p.second + 1] == '1')
 					{
@@ -629,8 +619,6 @@ void deal_with_input(char ch)// 处理键盘输入
 					player1.update_location(4);
 				}
 			}
-			// cout << p.first << p.second << endl;
-			// display();
 		}
 
 		int speed2 = player2.speed;
@@ -684,7 +672,7 @@ void deal_with_input(char ch)// 处理键盘输入
 			}
 			else if (ch == 'K')
 			{
-				if (p2.first < 19 && MAP[p2.first + 1][p2.second] != '*' && MAP[p2.first + 1][p2.second] != '#')
+				if (p2.first < 13 && MAP[p2.first + 1][p2.second] != '*' && MAP[p2.first + 1][p2.second] != '#')
 				{
 					if (MAP[p2.first + 1][p2.second] == '1')
 					{
@@ -706,7 +694,7 @@ void deal_with_input(char ch)// 处理键盘输入
 			}
 			else if (ch == 'L')
 			{
-				if (p2.second < 59 && MAP[p2.first][p2.second + 1] != '*' && MAP[p2.first][p2.second + 1] != '#')
+				if (p2.second < 19 && MAP[p2.first][p2.second + 1] != '*' && MAP[p2.first][p2.second + 1] != '#')
 				{
 					if (MAP[p2.first][p2.second + 1] == '1')
 					{
@@ -731,9 +719,9 @@ void deal_with_input(char ch)// 处理键盘输入
 }
 	void PrintAll()
 	{
-		for (int i = 0; i < 21; i++)
+		for (int i = 0; i < 14; i++)
 		{
-			for (int j = 0; j < 60; j++)
+			for (int j = 0; j < 20; j++)
 			{
 				cout << MAP[i][j];
 			}
@@ -747,35 +735,7 @@ void deal_with_input(char ch)// 处理键盘输入
 		system("cls");
 		PrintAll();
 	}
-	void Travel(Bomb *nowhead)
-	{
-		Bomb* cnt = head1;
-		Bomb* pre = cnt;
-		while (cnt != NULL)
-		{
-			pre = cnt;
-			cnt->state--;
-			if (cnt->levelsecond >= 1)
-			{
-				cnt->levelsecond--;
-				if (cnt->levelsecond == 0)
-					cnt->level = 1;
-			}
-			if (cnt->state == 0)
-				cnt->bomb_picture(cnt->level, 1), cnt->state = 5, display();
-			if (cnt->state == 5)
-			{
-				cnt->afterboom(), display();
-				if (cnt == nowhead)
-				{
-					nowhead = cnt->nextBomb;
-				}
-				else
-					pre->nextBomb = cnt->nextBomb;
-			}
-			cnt = cnt->nextBomb;
-		}
-	}
+	
 	void deal_with_time(int time)
 	{
 		if (time % 2 == 0)
@@ -783,8 +743,6 @@ void deal_with_input(char ch)// 处理键盘输入
 			r1.RobotBoom();
 			r2.RobotBoom();
 		}
-		//Travel(head1);
-		//Travel(head1);
 		Bomb* cnt = head1;
 		Bomb* pre = cnt;
 		Bomb* cnt2 = head2;
@@ -884,6 +842,23 @@ void deal_with_input(char ch)// 处理键盘输入
 		rboom1.state = 4, rboom1.level = 1;
 		rboom2.state = 4, rboom2.level = 1;
 	}
+	void InitMap()
+	{
+		int locx, locy,tool;
+		for (int i = 0; i < 500; i++)
+		{
+			tool = rand() % 2 + 1;
+			locx = rand() % 13;
+			locy = rand() % 19;
+			if (MAP[locx][locy] == '*')
+			{
+				if (tool == 1)
+					MAPTool[locx][locy] = 1;
+				else
+					MAPTool[locx][locy] = 2;
+			}
+		}
+	}
 	void Welcome()
 	{
 		cout << "***********************************************************" << endl;
@@ -916,7 +891,7 @@ void deal_with_input(char ch)// 处理键盘输入
 	int main()
 	{
 		Welcome();
-		Initmap();
+		InitMap();
 		InitRole();
 		PrintAll();
 		int count = 1, times = 0;
