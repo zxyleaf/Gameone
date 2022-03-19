@@ -455,7 +455,6 @@ void deal_with_input(char ch)// 处理键盘输入
 		Bomb* newone = new Bomb;
 		newone->SetId(1);
 		newone->state = 3;
-		newone->levelsecond = 6;
 		newone->owner = &player1;
 		Bomb* temp = head1;
 		while (temp != NULL && temp->nextBomb != NULL)
@@ -465,12 +464,14 @@ void deal_with_input(char ch)// 处理键盘输入
 		if (head1 != NULL)
 		{
 			newone->level = temp->level;
+			newone->levelsecond = temp->levelsecond;
 			newone->nextBomb = NULL;
 			temp->nextBomb = newone;
 		}
 		else
 		{
 			newone->level = 1;
+			newone->levelsecond = 0;
 			newone->nextBomb = NULL;
 			head1 = newone;
 		}
@@ -483,7 +484,6 @@ void deal_with_input(char ch)// 处理键盘输入
 		Bomb* newone = new Bomb;
 		newone->SetId(2);
 		newone->state = 3;
-		newone->levelsecond = 6;
 		newone->owner = &player2;
 		Bomb* temp = head2;
 		while (temp != NULL && temp->nextBomb != NULL)
@@ -493,13 +493,14 @@ void deal_with_input(char ch)// 处理键盘输入
 		if (head2 != NULL)
 		{
 			newone->level = temp->level;
+			newone->levelsecond = temp->levelsecond;
 			newone->nextBomb = NULL;
 			temp->nextBomb = newone;
-			// system("pause");
 		}
 		else
 		{
 			newone->level = 1;
+			newone->levelsecond = 0;
 			newone->nextBomb = NULL;
 			head2 = newone;
 		}
@@ -524,6 +525,13 @@ void deal_with_input(char ch)// 处理键盘输入
 					}
 					else if (MAP[p.first - 1][p.second] == '2')
 					{
+						Bomb* cnt = head1;
+						while (cnt != NULL)
+						{
+							cnt->level++;
+							cnt->levelsecond += 6;
+							cnt = cnt->nextBomb;
+						}
 						player1.score++, bomb1.level++, bomb1.levelsecond += 6;
 						MAPTool[p.first - 1][p.second] = 0;
 					}
@@ -602,7 +610,6 @@ void deal_with_input(char ch)// 处理键盘输入
 				}
 			}
 		}
-
 		int speed2 = player2.speed;
 		while (speed2 > 0)
 		{
@@ -879,8 +886,31 @@ void deal_with_input(char ch)// 处理键盘输入
 		InitRole();
 		PrintAll();
 		int count = 1, times = 0;
+		clock_t start , now = 0;
+		start = clock();
 		while (1)
 		{
+			now = clock();
+			if ((now - start) / CLK_TCK == 600)
+			{
+				system("cls");
+				cout << "You have already played for 10 min" << endl;
+				cout << "HOW COULD YOU NOT KILL EACH OTHER" << endl;
+				cout << "Game is over" << endl;
+				if (player1.score > player2.score)
+				{
+					cout << "Player 1 Win" << endl;
+				}
+				else if(player1.score < player2.score)
+				{
+					cout << "Player 2 Win" << endl;
+				}
+				else
+				{
+					cout << "oh ! DOGFALL" << endl;
+				}
+				break;
+			}
 			if (player1.live == 0)
 			{
 				system("cls");
@@ -901,7 +931,6 @@ void deal_with_input(char ch)// 处理键盘输入
 					ch = _getch();
 					if (ch == 27)
 						break;
-					// system("pause");
 					deal_with_input(ch);
 					display();
 				}
