@@ -304,7 +304,7 @@ void Robot::RobotBoom()
 			else
 				MAP[locationr.first][locationr.second] = ' ';
 			update_location(locationr.first - 1, locationr.second);
-			dir = 0;
+			dir = DOWN;
 			display();
 		}
 		else if (this->ownthebomb->state == 4 && MAP[locationr.first - 1][locationr.second] == '*' && locationr.first < 12 && MAP[locationr.first + 1][locationr.second] != ' ' && MAP[locationr.first + 2][locationr.second] != ' ')
@@ -336,13 +336,13 @@ void Robot::RobotBoom()
 			else
 				MAP[locationr.first][locationr.second] = ' ';
 			update_location(locationr.first + 1, locationr.second);
-			dir = 0;
+			dir = UP;
 			display();
 		}
 		else if (this->ownthebomb->state == 4 && MAP[locationr.first + 1][locationr.second] == '*' && (locationr.first > 2 && MAP[locationr.first - 1][locationr.second] == ' ' && MAP[locationr.first - 2][locationr.second] == ' '))
 		{
 			MAP[locationr.first][locationr.second] = 'o';
-			dir = 1;
+			dir = UP;
 			this->ownthebomb->update_location(locationr.first, locationr.second);
 			this->ownthebomb->state = 3;
 			this->Walk(1);
@@ -352,7 +352,7 @@ void Robot::RobotBoom()
 			display();
 		}
 		else
-			predir = 2;
+			predir = DOWN;
 	}
 	else if (direction == LEFT)
 	{
@@ -374,7 +374,7 @@ void Robot::RobotBoom()
 		else if (this->ownthebomb->state == 4 && MAP[locationr.first][locationr.second - 1] == '*' && locationr.second < 18 && MAP[locationr.first][locationr.second + 1] == ' ' && MAP[locationr.first][locationr.second + 2] == ' ')
 		{
 			MAP[locationr.first][locationr.second] = 'o';
-			dir = 4;
+			dir = LEFT;
 			this->ownthebomb->update_location(locationr.first, locationr.second);
 			this->ownthebomb->state = 3;
 			this->Walk(4);
@@ -384,7 +384,7 @@ void Robot::RobotBoom()
 			display();
 		}
 		else
-			predir = 4;
+			predir = LEFT;
 	}
 	else if (direction == RIGHT)
 	{
