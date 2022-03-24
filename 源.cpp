@@ -4,7 +4,7 @@ using namespace std;
 const int WIDE = 14;
 const int LEN = 20;
 #define OVER 5
-#define ONE_SECOND 10000
+#define ONE_SECOND 25000
 int MAPTool[14][20];
 clock_t cur, lasttime;
 
@@ -25,8 +25,9 @@ char MAP[14][20] = {
 	{'#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'}
 };
 
-
 class Bomb;
+class Player;
+class Robot;
 enum DIRACTION
 {
 	UP = 1, DOWN, RIGHT, LEFT
@@ -34,29 +35,36 @@ enum DIRACTION
 void display();
 void PrintAll();
 void Welcome();
+void GetScore(int id);
 class Robot
 {
 private:
 	char symbol;
 	std::pair<int, int> locationr;
-	
+	int id;
 public:
-	int predir;
-	int dir;
-    int id;
+	int predir = 0;
+	int dir = 0;
+	bool live = 1;
 	Bomb* ownthebomb;
-	Robot(int x, int y, char symbol);
+	Robot(int x, int y,int idx, char symbol);
+	int GetId();
 	void RobotBoom();
 	void update_location(int x, int y);
 	void Walk(int dir);
 	std::pair<int, int> get_location();
 };
 
-Robot::Robot(int x, int y, char sym)
+Robot::Robot(int x, int y, int idx, char sym)
 {
 	locationr.first = x;
 	locationr.second = y;
+	id = idx;
 	symbol = sym;
+}
+int Robot::GetId()
+{
+	return id;
 }
 void Robot::update_location(int x, int y)
 {
@@ -77,13 +85,12 @@ public:
 	bool live = 1;
 	int score = 0;
 	int speed = 1;
-	int speedsecond;
-	int Bombnum;
-	int Diff;
-	clock_t Lastime;
+	int speedsecond = 0;
+	int Bombnum = 3;
+	int Diff = 500;
+	clock_t Lastime = 0;
 	char GetSymbol();
-	void SetBomb();
-	Player(int x, int y);
+	Player(int x, int y, char sy);
 	void update_location(int type);
 	std::pair<int, int> get_location();
 };
@@ -96,11 +103,11 @@ private:
 public:
 	int level = 1;
 	int levelsecond = 0;
-	int state;
+	int state = -1;
 	Bomb* nextBomb;
 	Player* owner;
 	Robot* own;
-	void afterboom();
+	void afterboom(int id);
 	void bomb_picture(int lev, int id);
 	void update_location(int t, int y);
 	void SetId(int ID);
@@ -118,15 +125,14 @@ int Bomb::GetId()
 {
 	return id;
 }
-Player player1(5, 1);
-Player player2(1, 18);
-Robot r1(1, 9, 'R');
-Robot r2(12, 9, 'R');
+Player player1(5, 1,'A');
+Player player2(1, 18, 'B');
+Robot r1(1, 9, 1, 'R');
+Robot r2(12, 9, 2, 'R');
 Bomb bomb1;
 Bomb bomb2;
 Bomb rboom1;
 Bomb rboom2;
-
 
 std::pair<int, int> Bomb::get_location()
 {
@@ -134,7 +140,6 @@ std::pair<int, int> Bomb::get_location()
 }
 void Bomb::bomb_picture(int lev, int id)
 { 
-	MAP[location.first][location.second] = 'o';
 	bool flag1 = 0, flag2 = 0, flag3 = 0, flag4 = 0; // 不会穿透硬墙炸穿
 	for (int i = 1; i <= lev; i++)
 	{
@@ -145,14 +150,20 @@ void Bomb::bomb_picture(int lev, int id)
 				if (MAP[location.first - i][location.second] == '*')
 				{
 					this->owner->score++;
-				}
-				if (MAP[location.first - i][location.second] == 'A')
-				{
-					this->owner->live = 0;
+					flag1 = 1;
 				}
 			}
+			if (MAP[location.first - i][location.second] == 'A')
+				player1.live = 0;
+			else if (MAP[location.first - i][location.second] == 'B')
+				player2.live = 0;
+			else if (location.first - i == r1.get_location().first && location.second == r1.get_location().second)
+				r1.live = 0, GetScore(id);
+			else if (location.first - i == r2.get_location().first && location.second == r2.get_location().second)
+				r2.live = 0, GetScore(id);
+			if (MAP[location.first - i][location.second] == 'o')
+				MAPTool[location.first - i][location.second] = 3;
 			MAP[location.first - i][location.second] = '~';
-			
 		}
 		else if (MAP[location.first - i][location.second] == '#')
 		    flag1 = 1;
@@ -163,12 +174,19 @@ void Bomb::bomb_picture(int lev, int id)
 				if (MAP[location.first + i][location.second] == '*')
 				{
 					this->owner->score++;
-				}
-				if (MAP[location.first + i][location.second] == 'A')
-				{
-					this->owner->live = 0;
+					flag2 = 1;
 				}
 			}
+			if (MAP[location.first + i][location.second] == 'A')
+				player1.live = 0;
+			else if (MAP[location.first + i][location.second] == 'B')
+				player2.live = 0;
+			else if (location.first + i == r1.get_location().first && location.second == r1.get_location().second)
+				r1.live = 0, GetScore(id);
+			else if (location.first + i == r2.get_location().first && location.second == r2.get_location().second)
+				r2.live = 0, GetScore(id);
+			if (MAP[location.first + i][location.second] == 'o')
+				MAPTool[location.first + i][location.second] = 3;
 			MAP[location.first + i][location.second] = '~';
 		}
 		else if (MAP[location.first + i][location.second] == '#')
@@ -180,13 +198,19 @@ void Bomb::bomb_picture(int lev, int id)
 				if (MAP[location.first][location.second + i] == '*')
 				{
 					this->owner->score++;
-				}
-				if (MAP[location.first][location.second + i] == 'A')
-				{
-					this->owner->live = 0;
-
+					flag3 = 1;
 				}
 			}
+			if (MAP[location.first][location.second + i] == 'A')
+				player1.live = 0;
+			else if (MAP[location.first][location.second + i] == 'B')
+				player2.live = 0;
+			else if (location.first == r1.get_location().first && location.second + i == r1.get_location().second)
+				r1.live = 0, GetScore(id);
+			else if (location.first == r2.get_location().first && location.second + i == r2.get_location().second)
+				r2.live = 0, GetScore(id);
+			if (MAP[location.first][location.second + i] == 'o')
+				MAPTool[location.first][location.second + i] = 3;
 			MAP[location.first][location.second + i] = '~';
 		}
 		else if (MAP[location.first][location.second + i] == '#')
@@ -198,12 +222,19 @@ void Bomb::bomb_picture(int lev, int id)
 				if (MAP[location.first][location.second - i] == '*')
 				{
 					this->owner->score++;
-				}
-				if (MAP[location.first][location.second - i] == 'A')
-				{
-					this->owner->live = 0;
+					flag4 = 1;
 				}
 			}
+			if (MAP[location.first][location.second - i] == 'A')
+				player1.live = 0;
+			else if (MAP[location.first][location.second - i] == 'B')
+				player2.live = 0;
+			else if (location.first == r1.get_location().first && location.second - i == r1.get_location().second)
+				r1.live = 0, GetScore(id);
+			else if (location.first == r2.get_location().first && location.second - i == r2.get_location().second)
+				r2.live = 0, GetScore(id);
+			if (MAP[location.first][location.second - i] == 'o')
+				MAPTool[location.first][location.second - i] = 3;
 			MAP[location.first][location.second - i] = '~';
 		}
 		else if (MAP[location.first][location.second - i] == '#')
@@ -215,9 +246,29 @@ void Bomb::update_location(int x, int y)
 	location.first = x;
 	location.second = y;
 }
-void Bomb::afterboom()
+void GetScore(int id)
 {
-	if (MAPTool[location.first][location.second] == 1)
+	if (id == 1)
+		player1.score += 5;
+	else if (id == 2)
+		player2.score += 5;
+}
+void Bomb::afterboom(int id)
+{
+	MAPTool[location.first][location.second] = 0;
+	if (id == 1)
+		player1.Bombnum++;
+	else if (id == 2)
+		player2.Bombnum++;
+	if (location.first == player1.get_location().first && location.second == player1.get_location().second)
+		player1.live = 0;
+	else if (location.first == player2.get_location().first && location.second == player2.get_location().second)
+		player2.live = 0;
+	else if (location.first == r1.get_location().first && location.second == r1.get_location().second)
+		r1.live = 0;
+	else if (location.first == r2.get_location().first && location.second == r2.get_location().second)
+		r2.live = 0;
+	else if (MAPTool[location.first][location.second] == 1)
 		MAP[location.first][location.second] = '1';
 	else if (MAPTool[location.first][location.second] == 2)
 		MAP[location.first ][location.second] = '2';
@@ -231,6 +282,8 @@ void Bomb::afterboom()
 				MAP[location.first - i][location.second] = '1';
 			else if (MAPTool[location.first - i][location.second] == 2)
 				MAP[location.first - i][location.second] = '2';
+			else if (MAPTool[location.first - i][location.second] == 3)
+				MAP[location.first - i][location.second] = 'o';
 			else
 				MAP[location.first - i][location.second] = ' ';
 		}
@@ -240,6 +293,8 @@ void Bomb::afterboom()
 				MAP[location.first + i][location.second] = '1';
 			else if (MAPTool[location.first + i][location.second] == 2)
 				MAP[location.first + i][location.second] = '2';
+			else if (MAPTool[location.first + i][location.second] == 3)
+				MAP[location.first + i][location.second] = 'o';
 			else
 				MAP[location.first + i][location.second] = ' ';
 		}
@@ -249,6 +304,8 @@ void Bomb::afterboom()
 				MAP[location.first][location.second - i] = '1';
 			else if (MAPTool[location.first][location.second - i] == 2)
 				MAP[location.first][location.second - i] = '2';
+			else if (MAPTool[location.first][location.second - i] == 3)
+				MAP[location.first][location.second - i] = 'o';
 			else
 				MAP[location.first][location.second - i] = ' ';
 		}
@@ -258,6 +315,8 @@ void Bomb::afterboom()
 				MAP[location.first][location.second + i] = '1';
 			else if (MAPTool[location.first][location.second + 1] == 2)
 				MAP[location.first][location.second + i] = '2';
+			else if (MAPTool[location.first][location.second + 1] == 3)
+				MAP[location.first][location.second + i] = 'o';
 			else
 				MAP[location.first][location.second + i] = ' ';
 		}
@@ -289,7 +348,6 @@ void Player::update_location(int type)
 		location.second = location.second + 1;
 }
 
-
 void Robot::RobotBoom()
 {
 	int direction = rand() % 4 + 1;
@@ -299,7 +357,6 @@ void Robot::RobotBoom()
 		direction = rand() % 4 + 1;
 	if (direction == UP)
 	{
-		
 		if (MAP[locationr.first - 1][locationr.second] == ' ' || MAP[locationr.first - 1][locationr.second] == '1' || MAP[locationr.first - 1][locationr.second] == '2')
 		{
 			predir = DOWN;
@@ -317,6 +374,7 @@ void Robot::RobotBoom()
 		else if (this->ownthebomb->state == 4 && MAP[locationr.first - 1][locationr.second] == '*' && locationr.first < 12 && MAP[locationr.first + 1][locationr.second] != ' ' && MAP[locationr.first + 2][locationr.second] != ' ')
 		{
 			MAP[locationr.first][locationr.second] = 'o';
+			MAPTool[locationr.first][locationr.second] = 3;
 			dir = 2;
 			this->ownthebomb->update_location(locationr.first, locationr.second);
 			this->ownthebomb->state = 3;
@@ -331,7 +389,6 @@ void Robot::RobotBoom()
 	}
 	else if (direction == DOWN)
 	{
-		
 		if (MAP[locationr.first + 1][locationr.second] == ' ' || MAP[locationr.first + 1][locationr.second] == '1' || MAP[locationr.first + 1][locationr.second] == '2')
 		{
 			predir = UP;
@@ -349,6 +406,7 @@ void Robot::RobotBoom()
 		else if (this->ownthebomb->state == 4 && MAP[locationr.first + 1][locationr.second] == '*' && (locationr.first > 2 && MAP[locationr.first - 1][locationr.second] == ' ' && MAP[locationr.first - 2][locationr.second] == ' '))
 		{
 			MAP[locationr.first][locationr.second] = 'o';
+			MAPTool[locationr.first][locationr.second] = 3;
 			dir = UP;
 			this->ownthebomb->update_location(locationr.first, locationr.second);
 			this->ownthebomb->state = 3;
@@ -363,7 +421,6 @@ void Robot::RobotBoom()
 	}
 	else if (direction == LEFT)
 	{
-
 		if (MAP[locationr.first][locationr.second - 1] == ' ' || MAP[locationr.first][locationr.second - 1] == '1' || MAP[locationr.first][locationr.second - 1] == '2')
 		{
 			predir = RIGHT;
@@ -381,6 +438,7 @@ void Robot::RobotBoom()
 		else if (this->ownthebomb->state == 4 && MAP[locationr.first][locationr.second - 1] == '*' && locationr.second < 18 && MAP[locationr.first][locationr.second + 1] == ' ' && MAP[locationr.first][locationr.second + 2] == ' ')
 		{
 			MAP[locationr.first][locationr.second] = 'o';
+			MAPTool[locationr.first][locationr.second] = 3;
 			dir = LEFT;
 			this->ownthebomb->update_location(locationr.first, locationr.second);
 			this->ownthebomb->state = 3;
@@ -395,35 +453,35 @@ void Robot::RobotBoom()
 	}
 	else if (direction == RIGHT)
 	{
-	    
-	if (MAP[locationr.first][locationr.second + 1] == ' ' || MAP[locationr.first][locationr.second + 1] == '1' || MAP[locationr.first][locationr.second + 1] == '2')
-	{
-		predir = LEFT;
-		MAP[locationr.first][locationr.second + 1] = 'R';
-		if (MAPTool[locationr.first][locationr.second] == 1)
-			MAP[locationr.first][locationr.second] = '1';
-		else if (MAPTool[locationr.first][locationr.second] == 2)
-			MAP[locationr.first][locationr.second] = '2';
-		else
+		if (MAP[locationr.first][locationr.second + 1] == ' ' || MAP[locationr.first][locationr.second + 1] == '1' || MAP[locationr.first][locationr.second + 1] == '2')
+		{
+			predir = LEFT;
+			MAP[locationr.first][locationr.second + 1] = 'R';
+			if (MAPTool[locationr.first][locationr.second] == 1)
+				MAP[locationr.first][locationr.second] = '1';
+			else if (MAPTool[locationr.first][locationr.second] == 2)
+				MAP[locationr.first][locationr.second] = '2';
+			else
+				MAP[locationr.first][locationr.second] = ' ';
+			update_location(locationr.first, locationr.second + 1);
+			dir = RIGHT;
+			display();
+		}
+		else if (this->ownthebomb->state == 4 && MAP[locationr.first][locationr.second + 1] == '*' && locationr.second > 2 && MAP[locationr.first][locationr.second - 1] == ' ' && MAP[locationr.first][locationr.second - 2] == ' ')
+		{
+			MAP[locationr.first][locationr.second] = 'o';
+			MAPTool[locationr.first][locationr.second] = 3;
+			dir = 3;
+			this->ownthebomb->update_location(locationr.first, locationr.second);
+			this->ownthebomb->state = 3;
+			this->Walk(3);
 			MAP[locationr.first][locationr.second] = ' ';
-		update_location(locationr.first, locationr.second + 1);
-		dir = RIGHT;
-		display();
-	}
-	else if (this->ownthebomb->state == 4 && MAP[locationr.first][locationr.second + 1] == '*' && locationr.second > 2 && MAP[locationr.first][locationr.second - 1] == ' ' && MAP[locationr.first][locationr.second - 2] == ' ')
-	{
-		MAP[locationr.first][locationr.second] = 'o';
-		dir = 3;
-		this->ownthebomb->update_location(locationr.first, locationr.second);
-		this->ownthebomb->state = 3;
-		this->Walk(3);
-		MAP[locationr.first][locationr.second] = ' ';
-		MAP[locationr.first][locationr.second - 1] = 'R';
-		update_location(locationr.first, locationr.second - 1);
-		display();
-	}
-	else
-		predir = 3;
+			MAP[locationr.first][locationr.second - 1] = 'R';
+			update_location(locationr.first, locationr.second - 1);
+			display();
+		}
+	    else
+		   predir = 3;
 	}
 }
 void Robot::Walk(int dir)
@@ -452,22 +510,20 @@ void Robot::Walk(int dir)
 	display();
 }
 
-
 void deal_with_input(char ch)// 处理键盘输入
 {
 	std::pair<int, int> p = player1.get_location();
 	std::pair<int, int> p2 = player2.get_location();
-	if (ch == ' ')
+	if (ch == ' ' && player1.Bombnum > 0)
 	{
+		player1.Bombnum--;
 		Bomb* newone = new Bomb;
 		newone->SetId(1);
 		newone->state = 3;
 		newone->owner = &player1;
 		Bomb* temp = head1;
 		while (temp != NULL && temp->nextBomb != NULL)
-		{
 			temp = temp->nextBomb;
-		}
 		if (head1 != NULL)
 		{
 			newone->level = temp->level;
@@ -477,26 +533,26 @@ void deal_with_input(char ch)// 处理键盘输入
 		}
 		else
 		{
-			newone->level = 1;
-			newone->levelsecond = 0;
+			newone->level = bomb1.level;
+			newone->levelsecond = bomb1.levelsecond;
 			newone->nextBomb = NULL;
 			head1 = newone;
 		}
 		newone->update_location(p.first, p.second);
+		MAPTool[p.first][p.second] = 3;
 		newone->state = 3;
 		MAP[p.first][p.second] = 'o';
 	}
-	else if (ch == 13)
+	else if (ch == 13 && player2.Bombnum > 0)
 	{
+		player2.Bombnum--;
 		Bomb* newone = new Bomb;
 		newone->SetId(2);
 		newone->state = 3;
 		newone->owner = &player2;
 		Bomb* temp = head2;
 		while (temp != NULL && temp->nextBomb != NULL)
-		{
 			temp = temp->nextBomb;
-		}
 		if (head2 != NULL)
 		{
 			newone->level = temp->level;
@@ -506,32 +562,31 @@ void deal_with_input(char ch)// 处理键盘输入
 		}
 		else
 		{
-			newone->level = 1;
-			newone->levelsecond = 0;
+			newone->level = bomb2.level;
+			newone->levelsecond = bomb2.levelsecond;
 			newone->nextBomb = NULL;
 			head2 = newone;
 		}
 		newone->update_location(p2.first, p2.second);
 		newone->state = 3;
 		MAP[p2.first][p2.second] = 'o';
+		MAPTool[p2.first][p2.second] = 3;
 	}
 	else
 	{
 		if(ch == 'W' || ch == 'A' || ch == 'S' || ch == 'D')
 		{
 			if ((cur - player1.Lastime) < player1.Diff)
-			{
-				return;
-			}
+			    return;
 			player1.Lastime = cur;
 			std::pair<int, int> p = player1.get_location();
 			if (ch == 'W')
 			{
-				if (p.first > 0 && MAP[p.first - 1][p.second] != '#' && MAP[p.first - 1][p.second] != '*')
+				if (p.first > 0 && MAP[p.first - 1][p.second] != '#' && MAP[p.first - 1][p.second] != '*'&& MAP[p.first - 1][p.second] != 6)
 				{
 					if (MAP[p.first - 1][p.second] == '1')
 					{
-						player1.score++, player1.speedsecond += 6;
+						player1.score++, player1.speed++, player1.speedsecond += 6;
 						player1.Diff /= 4;
 						MAPTool[p.first - 1][p.second] = 0;
 					}
@@ -549,6 +604,8 @@ void deal_with_input(char ch)// 处理键盘输入
 					}
 					if (MAP[p.first][p.second] == 'o')
 						MAP[p.first][p.second] = 'o';
+					else if (MAPTool[p.first][p.second] == 3)
+						MAP[p.first][p.second] = 'o';
 					else
 						MAP[p.first][p.second] = ' ';
 					MAP[p.first - 1][p.second] = 'A';
@@ -557,11 +614,11 @@ void deal_with_input(char ch)// 处理键盘输入
 			}
 			else if (ch == 'A')
 			{
-				if (p.second > 0 && MAP[p.first][p.second - 1] != '*' && MAP[p.first][p.second - 1] != '#')
+				if (p.second > 0 && MAPTool[p.first][p.second - 1] != 6 && MAP[p.first][p.second - 1] != '#' && MAP[p.first][p.second - 1] != '*')
 				{
 					if (MAP[p.first][p.second - 1] == '1')
 					{
-						player1.score++, player1.speedsecond += 6;
+						player1.score++, player1.speed++, player1.speedsecond += 6;
 						player1.Diff /= 4;
 						MAPTool[p.first][p.second - 1] = 0;
 					}
@@ -579,6 +636,8 @@ void deal_with_input(char ch)// 处理键盘输入
 					}
 					if (MAP[p.first][p.second] == 'o')
 						MAP[p.first][p.second] = 'o';
+					else if (MAPTool[p.first][p.second] == 3)
+						MAP[p.first][p.second] = 'o';
 					else
 						MAP[p.first][p.second] = ' ';
 					MAP[p.first][p.second - 1] = 'A';
@@ -587,11 +646,11 @@ void deal_with_input(char ch)// 处理键盘输入
 			}
 			else if (ch == 'S')
 			{
-				if (p.first < 13 && MAP[p.first + 1][p.second] != '*' && MAP[p.first + 1][p.second] != '#')
+				if (p.first < 13 && MAPTool[p.first + 1][p.second] != 6 && MAP[p.first + 1][p.second] != '#' && MAP[p.first + 1][p.second] != '*')
 				{
 					if (MAP[p.first + 1][p.second] == '1')
 					{
-						player1.score++, player1.speedsecond += 6;
+						player1.score++, player1.speed++, player1.speedsecond += 6;
 						player1.Diff /= 4;
 						MAPTool[p.first + 1][p.second] = 0;
 					}
@@ -609,6 +668,8 @@ void deal_with_input(char ch)// 处理键盘输入
 					}
 					if (MAP[p.first][p.second] == 'o')
 						MAP[p.first][p.second] = 'o';
+					else if (MAPTool[p.first][p.second] == 3)
+						MAP[p.first][p.second] = 'o';
 					else
 						MAP[p.first][p.second] = ' ';
 					MAP[p.first + 1][p.second] = 'A';
@@ -617,11 +678,11 @@ void deal_with_input(char ch)// 处理键盘输入
 			}
 			else if (ch == 'D')
 			{
-				if (p.second < 19 && MAP[p.first][p.second + 1] != '*' && MAP[p.first][p.second + 1] != '#')
+				if (p.second < 19 && MAPTool[p.first][p.second + 1] != 6 && MAP[p.first][p.second + 1] != '#' && MAP[p.first][p.second + 1] != '*')
 				{
 					if (MAP[p.first][p.second + 1] == '1')
 					{
-						player1.score++, player1.speedsecond += 6;
+						player1.score++, player1.speed++, player1.speedsecond += 6;
 						player1.Diff /= 4;
 						MAPTool[p.first][p.second + 1] = 0;
 					}
@@ -639,6 +700,8 @@ void deal_with_input(char ch)// 处理键盘输入
 					}
 					if (MAP[p.first][p.second] == 'o')
 						MAP[p.first][p.second] = 'o';
+					else if (MAPTool[p.first][p.second] == 3)
+						MAP[p.first][p.second] = 'o';
 					else
 						MAP[p.first][p.second] = ' ';
 					MAP[p.first][p.second + 1] = 'A';
@@ -649,18 +712,16 @@ void deal_with_input(char ch)// 处理键盘输入
 		else
 		{
 			if ((cur - player2.Lastime) < player2.Diff)
-			{
-				return;
-			}
+			    return;
 			player2.Lastime = cur;
 			std::pair<int, int> p2 = player2.get_location();
 			if (ch == 'I')
 			{
-				if (p2.first > 0 && MAP[p2.first - 1][p2.second] != '*' && MAP[p2.first - 1][p2.second] != '#')
+				if (p2.first > 0 && MAPTool[p2.first - 1][p2.second] != 6 && MAP[p2.first - 1][p2.second] != '#' && MAP[p2.first - 1][p2.second] != '*')
 				{
 					if (MAP[p2.first - 1][p2.second] == '1')
 					{
-						player2.score++, player2.speedsecond += 6;
+						player2.score++, player2.speed++, player2.speedsecond += 6;
 						player2.Diff /= 4; 
 						MAPTool[p2.first - 1][p2.second] = 0;
 					}
@@ -678,6 +739,8 @@ void deal_with_input(char ch)// 处理键盘输入
 					}
 					if (MAP[p2.first][p2.second] == 'o')
 						MAP[p2.first][p2.second] = 'o';
+					else if (MAPTool[p.first][p.second] == 3)
+						MAP[p2.first][p2.second] = 'o';
 					else
 						MAP[p2.first][p2.second] = ' ';
 					MAP[p2.first - 1][p2.second] = 'B';
@@ -686,11 +749,11 @@ void deal_with_input(char ch)// 处理键盘输入
 			}
 			else if (ch == 'J')
 			{
-				if (p2.second > 0 && MAP[p2.first][p2.second - 1] != '*' && MAP[p2.first][p2.second - 1] != '#')
+				if (p2.second > 0 && MAPTool[p2.first][p2.second - 1] != 6 && MAP[p2.first][p2.second - 1] != '#' && MAP[p2.first][p2.second - 1] != '*')
 				{
 					if (MAP[p2.first][p2.second - 1] == '1')
 					{
-						player2.score++, player2.speedsecond += 6;
+						player2.score++, player2.speed++, player2.speedsecond += 6;
 						player2.Diff /= 4;
 						MAPTool[p2.first][p2.second - 1] = 0;
 					}
@@ -708,6 +771,8 @@ void deal_with_input(char ch)// 处理键盘输入
 					}
 					if (MAP[p2.first][p2.second] == 'o')
 						MAP[p2.first][p2.second] = 'o';
+					else if (MAPTool[p.first][p.second] == 3)
+						MAP[p2.first][p2.second] = 'o';
 					else
 						MAP[p2.first][p2.second] = ' ';
 					MAP[p2.first][p2.second - 1] = 'B';
@@ -716,11 +781,11 @@ void deal_with_input(char ch)// 处理键盘输入
 			}
 			else if (ch == 'K')
 			{
-				if (p2.first < 13 && MAP[p2.first + 1][p2.second] != '*' && MAP[p2.first + 1][p2.second] != '#')
+				if (p2.first < 13 && MAPTool[p2.first + 1][p2.second] != 6 && MAP[p2.first + 1][p2.second] != '#' && MAP[p2.first + 1][p2.second] != '*')
 				{
 					if (MAP[p2.first + 1][p2.second] == '1')
 					{
-						player2.score++, player2.speedsecond += 6;
+						player2.score++, player2.speed++, player2.speedsecond += 6;
 						player2.Diff /= 4;
 						MAPTool[p2.first + 1][p2.second] = 0;
 					}
@@ -746,11 +811,11 @@ void deal_with_input(char ch)// 处理键盘输入
 			}
 			else if (ch == 'L')
 			{
-				if (p2.second < 19 && MAP[p2.first][p2.second + 1] != '*' && MAP[p2.first][p2.second + 1] != '#')
+				if (p2.second < 19 && MAPTool[p2.first][p2.second + 1] != 6 && MAP[p2.first][p2.second + 1] != '#' && MAP[p2.first][p2.second + 1] != '*')
 				{
 					if (MAP[p2.first][p2.second + 1] == '1')
 					{
-						player2.score++, player2.speedsecond += 6;
+						player2.score++, player2.speed++, player2.speedsecond += 6;
 						player2.Diff /= 4;
 						MAPTool[p2.first][p2.second + 1] = 0;
 					}
@@ -768,6 +833,8 @@ void deal_with_input(char ch)// 处理键盘输入
 					}
 					if (MAP[p2.first][p2.second] == 'o')
 						MAP[p2.first][p2.second] = 'o';
+					else if (MAPTool[p.first][p.second] == 3)
+						MAP[p2.first][p2.second] = 'o';
 					else
 						MAP[p2.first][p2.second] = ' ';
 					MAP[p2.first][p2.second + 1] = 'B';
@@ -777,31 +844,40 @@ void deal_with_input(char ch)// 处理键盘输入
 		}
 	}
 }
-	void PrintAll()
+
+void PrintAll()
+{
+	for (int i = 0; i < 14; i++)
 	{
-		for (int i = 0; i < 14; i++)
+		for (int j = 0; j < 20; j++)
 		{
-			for (int j = 0; j < 20; j++)
-			{
-				cout << MAP[i][j];
-			}
-			cout << endl;
+			cout << MAP[i][j];
 		}
-		cout << "Player1 score : " << player1.score << endl;
-		cout << "Player2 score : " << player2.score << endl;
+		cout << endl;
 	}
-	void display()
-	{
-		system("cls");
-		PrintAll();
-	}
+	cout << "Player1 score : " << player1.score << endl;
+	cout << "        Bomb level: " << bomb1.level << endl;
+	cout << "        Bomb number:" << player1.Bombnum << endl;
+	cout << "        Speed:      " << player1.speed << endl;
+	cout << "Player2 score : " << player2.score << endl;
+	cout << "        Bomb level:" << bomb2.level << endl;
+	cout << "        Bomb number:" << player2.Bombnum << endl;
+	cout << "        Speed:      " << player2.speed << endl;
+}
+void display()
+{
+	system("cls");
+	PrintAll();
+}
 	
 	void deal_with_time(int time)
 	{
 		if (time % 8 == 0)
 		{
-			r1.RobotBoom();
-			r2.RobotBoom();
+			if (r1.live == 1)
+				r1.RobotBoom();
+			if (r2.live == 1)
+				r2.RobotBoom();
 		}
 		Bomb* cnt = head1;
 		Bomb* pre = cnt;
@@ -811,18 +887,9 @@ void deal_with_input(char ch)// 处理键盘输入
 		{
 			pre = cnt;
 			cnt->state--;
-			if (cnt->levelsecond >= 1)
-			{
-				cnt->levelsecond--;
-				if (cnt->levelsecond == 0)
-					cnt->level = 1;
-			}
-			if (cnt->state == 0)
-				cnt->bomb_picture(cnt->level, 1), cnt->state = 5, display();
 			if (cnt->state == 5)
 			{
-				
-				cnt->afterboom(), display();
+				cnt->afterboom(cnt->GetId()), display();
 				if (cnt == head1)
 				{
 					head1 = cnt->nextBomb;
@@ -830,23 +897,23 @@ void deal_with_input(char ch)// 处理键盘输入
 				else
 					pre->nextBomb = cnt->nextBomb;
 			}
+			if (cnt->levelsecond >= 1)
+			{
+				cnt->levelsecond--;
+				if (cnt->levelsecond == 0)
+					cnt->level = 1,bomb1.level = 1;
+			}
+			if (cnt->state == 0)
+				cnt->bomb_picture(cnt->level, 1), cnt->state = 6, display();
 			cnt = cnt->nextBomb;
 		}
 		while (cnt2 != NULL)
 		{
 			pre2 = cnt2;
 			cnt2->state--;
-			if (cnt2->levelsecond >= 1)
-			{
-				cnt2->levelsecond--;
-				if (cnt2->levelsecond == 0)
-					cnt2->level = 1;
-			}
-			if (cnt2->state == 0)
-				cnt2->bomb_picture(cnt2->level, 2), cnt2->state = 5, display();
 			if (cnt2->state == 5)
 			{
-				cnt2->afterboom(), display();
+				cnt2->afterboom(cnt2->GetId()), display();
 				if (cnt2 == head2)
 				{
 					head2 = cnt2->nextBomb;
@@ -854,19 +921,37 @@ void deal_with_input(char ch)// 处理键盘输入
 				else
 					pre2->nextBomb = cnt2->nextBomb;
 			}
+			if (cnt2->levelsecond >= 1)
+			{
+				cnt2->levelsecond--;
+				if (cnt2->levelsecond == 0)
+					cnt2->level = 1, bomb2.level= 1;
+			}
+			if (cnt2->state == 0)
+				cnt2->bomb_picture(cnt2->level, 2), cnt2->state = 6, display();
 			cnt2 = cnt2->nextBomb;
 		}
 		if (player1.speedsecond >= 1)
 		{
 			player1.speedsecond--;
 			if (player1.speedsecond == 0)
-				player1.speed = 1;
+				player1.Diff = 150, player1.speed = 1;
 		}
 		if (player2.speedsecond >= 1)
 		{
 			player2.speedsecond--;
 			if (player2.speedsecond == 0)
-				player2.speed = 1;
+				player2.Diff = 150, player2.speed = 1;
+		}
+		if (rboom1.state == 5)
+		{
+			rboom1.state--;
+			rboom1.afterboom(rboom1.GetId()), display();
+		}
+		if (rboom2.state == 5)
+		{
+			rboom2.state--;
+			rboom2.afterboom(rboom2.GetId()), display();
 		}
 		if (bomb1.levelsecond >= 1)
 		{
@@ -892,27 +977,18 @@ void deal_with_input(char ch)// 处理键盘输入
 			if (rboom2.state == 0)
 				rboom2.bomb_picture(rboom2.level, 4), rboom2.state = 5, display();
 		}
-		if (rboom1.state == 5)
-		{
-			rboom1.state--;
-			rboom1.afterboom(), display();
-		}
-		if (rboom2.state == 5)
-		{
-			rboom2.state--;
-			rboom2.afterboom(), display();
-		}
+		
 	}
 	void InitRole()
 	{
 		player1.score = 0, player1.speed = 1, player1.speedsecond = 0, player1.Diff = 150, player1.Lastime = clock();
 		player2.score = 0, player2.speed = 1, player2.speedsecond = 0, player2.Diff = 150, player2.Lastime = clock();
-		player1.Bombnum = 1, player1.live = 1, player2.Bombnum = 1, player2.live = 1;
-		r1.predir = 0, r1.dir = 0, r1.id = 1, r2.predir = 0, r2.id = 2, r2.dir = 0;
-		bomb1.state = 4, bomb1.level = 1, bomb1.levelsecond = 0;
-		bomb2.state = 4, bomb2.level = 1, bomb2.levelsecond = 0;
-		rboom1.state = 4, rboom1.level = 1,rboom1.own = &r1;
-		rboom2.state = 4, rboom2.level = 1,rboom2.own = &r2;
+		player1.Bombnum = 3, player1.live = 1, player2.Bombnum = 3, player2.live = 1;
+		r1.predir = 0, r1.dir = 0, r2.predir = 0, r2.dir = 0;
+		bomb1.state = 4, bomb1.level = 1, bomb1.levelsecond = 0, bomb1.SetId(3);
+		bomb2.state = 4, bomb2.level = 1, bomb2.levelsecond = 0, bomb2.SetId(4);
+		rboom1.state = 4, rboom1.level = 1,rboom1.own = &r1, rboom1.SetId(5);
+		rboom2.state = 4, rboom2.level = 1,rboom2.own = &r2, rboom2.SetId(6);
 		r1.ownthebomb = &rboom1;
 		r2.ownthebomb = &rboom2;
 	}
@@ -926,6 +1002,7 @@ void deal_with_input(char ch)// 处理键盘输入
 			locy = rand() % 19;
 			if (MAP[locx][locy] == '*')
 			{
+				MAPTool[locx][locy] = 6;
 				if (tool == 1)
 					MAPTool[locx][locy] = 1;
 				else
@@ -937,25 +1014,34 @@ void deal_with_input(char ch)// 处理键盘输入
 	{
 		cout << "***********************************************************" << endl;
 		cout << "         Welcome to zxy's Crazy Arcade                     " << endl;
-		cout << "\n\nDo you want to be a super Bombman ?" << endl;
-		cout << "\nHere !   Make your Dream Come True !" << endl;
+		cout << "\n\n   Do you want to be a super Bombman ?" << endl;
+		cout << "\n     Here !   Make your Dream Come True !" << endl;
+		cout << "***********************************************************" << endl;
+		system("pause");
+		system("cls");
+
+		cout << "In this world\n";
+		cout << "'#' is the hard wall, which can't be bombed\n";
+		cout << "'*' is the soft wall, which can be bombed\n";
 		cout << "This game is for two players:" << endl;
 		cout << "'A' is player1\n";
 		cout << "'B' is player2\n";
+		cout << " \n";
 		cout << "Player1 use 'W S A D’   to control the direciton\n";
 		cout << "            'Space Key'  to put the bomb 'o'" << endl;
 		cout << "Player2 use 'I K J L'    to control the direction\n";
 		cout << "            'Return Key' to put the bomb 'o'" << endl;
 		cout << "There are also two Robots 'R'\n";
-		cout << "as for the wall:\n";
-		cout << "'#' is the hard wall, which can't be bombed\n";
-		cout << "'*' is the soft wall, which can be bombed\n";
+		cout << "they can put the bomb too\n";
+		system("pause");
 		cout << "as for the treat, they are hiding in the soft wall:\n";
 		cout << "'1' is for speeding up\n";
 		cout << "'2' is for increasing your bomb power\n";
-		cout << "\nnow!\n";
+		cout << "\n NOW !\n";
 		cout << "make good use of your bomb !\n";
-		cout << "bomb the wall，pick up the treatand get scores.\n";
+		cout << "Control A and B\n";
+		cout << "bomb the wall，pick up the treat and get scores.\n";
+		cout << "Your mission is to bomb the opponent and win the game\n";
 		cout << "oh ! Remember don't set yourself up!\n";
 		cout << "Here we go!\n";
 		system("pause");
