@@ -999,7 +999,7 @@ void display()
 				system("cls");
 				cout << "Player 1 died !!" << endl;
 				cout << "Player 2 win !!" << endl;
-
+				system("pause");
 				break;
 			}
 			else if (player2.GetLive() == 0)
