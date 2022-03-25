@@ -8,6 +8,7 @@ const int LEN = 20;
 int MAPTool[14][20];
 clock_t cur, lasttime;
 
+// 初始化地图
 char MAP[14][20] = {
 	{'#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'},
 	{'#','*','*','*','#','*','#','*',' ','R','*','*','*',' ','#',' ','#','#','B','#'},
@@ -24,19 +25,21 @@ char MAP[14][20] = {
 	{'#','*','*','*','#','*','#','*',' ','R',' ','*','*',' ','#',' ','*','#','*','#'},
 	{'#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'}
 };
-
+// 声明类
 class Bomb;
 class Player;
 class Robot;
+
 enum DIRACTION
 {
 	UP = 1, DOWN, RIGHT, LEFT
 };
+
 void display();
 void PrintAll();
 void Welcome();
 void GetScore(int id);
-class Robot
+class Robot // 机器人类
 {
 private:
 	char symbol;
@@ -83,7 +86,6 @@ private:
 	char symbol;
     bool live;
 public:
-	
 	int score = 0;
 	int speed = 1;
 	int speedsecond = 0;
@@ -999,7 +1001,6 @@ void display()
 				system("cls");
 				cout << "Player 1 died !!" << endl;
 				cout << "Player 2 win !!" << endl;
-				system("pause");
 				break;
 			}
 			else if (player2.GetLive() == 0)
@@ -1007,7 +1008,7 @@ void display()
 				system("cls");
 				cout << "Player 2 died !!" << endl;
 				cout << "Player 1 win !!" << endl;
-				system("pause");
+				break;
 			}
 			char ch;
                 if (_kbhit())
@@ -1027,5 +1028,6 @@ void display()
 			}
 			count++;
 		}
+		system("pause");
 		return 0;
 	}
